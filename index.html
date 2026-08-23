@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>단어 마스터 노트</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --paper:#FAF9F5; --ink:#232733; --ink-soft:#6b7080;
+    --margin-red:#C0455B; --accent:#3E6990; --accent-dark:#2C4E6B;
+    --correct:#3F8C63; --wrong:#C0455B; --mustard:#E3A548;
+    --card-bg:#FFFFFF; --line:#E7E3D6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--paper);
+    background-image: repeating-linear-gradient(to bottom, transparent, transparent 35px, #E9E5DA 35px, #E9E5DA 36px);
+    color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Segoe UI',sans-serif;
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  #app{ max-width:640px; margin:0 auto; padding:28px 18px 60px; }
+  .eyebrow{ font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--margin-red); font-weight:700; margin:0 0 6px; }
+  h1{ font-size:26px; margin:0 0 4px; letter-spacing:-.01em; font-weight:800; }
+  .subtitle{ color:var(--ink-soft); font-size:14px; margin:0 0 20px; line-height:1.5; }
+  .stat-strip{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+  .stat-chip{ background:var(--card-bg); border:1px solid var(--line); border-radius:8px; padding:8px 12px; font-size:12px; color:var(--ink-soft); }
+  .stats-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
+  .stat-card{
+    background:var(--card-bg); border:1px solid var(--line); border-radius:14px;
+    padding:16px 10px 14px; text-align:center; box-shadow:0 2px 10px rgba(35,39,51,.06);
+    border-top:3px solid var(--accent);
+  }
+  .stat-card.c-correct{ border-top-color:var(--correct); }
+  .stat-card.c-mustard{ border-top-color:var(--mustard); }
+  .stat-card-icon{ font-size:19px; margin-bottom:4px; }
+  .stat-card-num{ font-size:21px; font-weight:900; color:var(--ink); line-height:1.15; }
+  .stat-card-label{ font-size:10.5px; color:var(--ink-soft); margin-top:3px; font-weight:700; letter-spacing:.02em; }
+
+  .mastery-card{
+    background:var(--card-bg); border:1px solid var(--line); border-radius:14px;
+    padding:18px 18px 16px; margin-bottom:18px; box-shadow:0 2px 10px rgba(35,39,51,.06);
+  }
+  .mastery-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
+  .mastery-title{ font-weight:800; font-size:14.5px; }
+  .mastery-level{ font-size:11.5px; color:var(--ink-soft); font-weight:700; }
+  .stage-tracker{ display:flex; align-items:center; gap:6px; margin-bottom:12px; }
+  .stage-step{
+    flex:1; text-align:center; padding:9px 4px; border-radius:9px; font-size:10.5px; font-weight:800;
+    background:var(--paper); color:var(--ink-soft); border:1.5px solid var(--line);
+  }
+  .stage-step.done{ background:#EFF7F1; color:var(--correct); border-color:var(--correct); }
+  .stage-step.active{ background:#FBF1DD; color:#8a6417; border-color:var(--mustard); }
+  .stage-arrow{ color:var(--ink-soft); font-size:12px; flex:0 0 auto; }
+  .mastery-progress-text{ font-size:12px; color:var(--ink-soft); margin-bottom:6px; }
+  .stat-chip b{ color:var(--ink); font-weight:700; }
+
+  .settings-card{
+    background:var(--card-bg); border:1px solid var(--line); border-radius:14px;
+    padding:18px 18px 18px; margin-bottom:16px; box-shadow:0 2px 10px rgba(35,39,51,.06);
+  }
+  .settings-card-title{ display:flex; align-items:center; gap:8px; font-weight:800; font-size:15px; margin-bottom:14px; }
+  .settings-card-title .sc-icon{ font-size:18px; line-height:1; }
+  .card-subhead{ font-size:11px; font-weight:800; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; margin:16px 0 8px; }
+  .card-subhead:first-child{ margin-top:0; }
+  .person-row{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:10px; }
+  .person-row-top{ display:flex; align-items:center; gap:10px; }
+  .person-row-top .avatar{ width:34px; height:34px; font-size:13px; flex-shrink:0; }
+  .person-row-top .p-name{ font-weight:800; font-size:13.5px; flex:0 0 auto; min-width:52px; }
+  .person-row-top select{ flex:1; margin-bottom:0; font-size:13px; }
+  .person-row-link{
+    display:block; margin-top:8px; font-size:12px; color:var(--accent); font-weight:700;
+    text-align:right; cursor:pointer; background:none; border:none; width:100%; padding:2px 0;
+  }
+  .person-row-link:hover{ text-decoration:underline; }
+
+  .rank-row{
+    display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:12px;
+    border:1px solid var(--line); background:var(--card-bg); margin-bottom:10px;
+  }
+  .rank-row.top1{ border-color:var(--mustard); background:#FFF8E8; }
+  .rank-row.top2{ border-color:#C7CBD1; background:#F5F6F8; }
+  .rank-row.top3{ border-color:#E3B98A; background:#FBF1E6; }
+  .rank-num{ font-size:20px; font-weight:900; width:34px; text-align:center; flex-shrink:0; color:var(--ink-soft); }
+  .rank-row.top1 .rank-num, .rank-row.top2 .rank-num, .rank-row.top3 .rank-num{ font-size:24px; }
+  .rank-info{ flex:1; min-width:0; }
+  .rank-name{ font-weight:800; font-size:14.5px; }
+  .rank-level{ font-size:11.5px; color:var(--ink-soft); font-weight:700; margin-top:1px; }
+  .rank-stats{ text-align:right; font-size:11.5px; color:var(--ink-soft); line-height:1.5; flex-shrink:0; }
+  .rank-stats b{ color:var(--ink); font-weight:800; }
+
+  .flashcard{
+    position:relative; background:var(--card-bg); border-radius:12px;
+    padding:28px 24px 28px 52px; box-shadow:0 3px 14px rgba(35,39,51,.09);
+    border-left:3px solid var(--margin-red);
+  }
+  .flashcard::before{
+    content:''; position:absolute; left:16px; top:20px; bottom:20px; width:10px;
+    background-image: radial-gradient(circle, var(--paper) 4.2px, transparent 4.6px);
+    background-size:10px 32px; background-repeat:repeat-y;
+  }
+
+  .nav-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .link-btn{ background:none; border:none; color:var(--ink-soft); font-size:13.5px; cursor:pointer; padding:6px 0; font-weight:600; }
+  .link-btn:hover{ color:var(--ink); }
+
+  .card-btn{
+    display:block; width:100%; text-align:left; background:var(--card-bg);
+    border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin-bottom:12px;
+    cursor:pointer; box-shadow:0 2px 8px rgba(35,39,51,.05); transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .card-btn:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(35,39,51,.10); }
+  .card-btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; box-shadow:none; }
+  .card-btn .ctitle{ font-size:16.5px; font-weight:800; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+  .card-btn .cdesc{ font-size:12.5px; color:var(--ink-soft); }
+  .card-btn.primary{
+    background:linear-gradient(135deg, #EBF1F5, #FDFDFC);
+    border-color:var(--accent); border-width:1.5px;
+    box-shadow:0 4px 16px rgba(62,105,144,.20);
+  }
+  .card-btn.primary .ctitle{ color:var(--accent-dark); }
+  .card-btn.primary:hover{ box-shadow:0 8px 22px rgba(62,105,144,.26); }
+  .card-btn.gold{
+    background:linear-gradient(135deg, #FFF6E0, #FDFDFC);
+    border-color:var(--mustard); border-width:1.5px;
+    box-shadow:0 4px 16px rgba(227,165,72,.24);
+  }
+  .card-btn.gold .ctitle{ color:#8a6417; }
+  .card-btn.gold:hover{ box-shadow:0 8px 22px rgba(227,165,72,.30); }
+  .badge{ background:var(--mustard); color:#3a2c0d; font-weight:800; font-size:11.5px; border-radius:20px; padding:2px 9px; }
+  .badge.zero{ background:var(--line); color:var(--ink-soft); }
+
+  .btn{ background:var(--accent); color:#fff; border:none; border-radius:9px; padding:12px 20px; font-size:14.5px; font-weight:700; cursor:pointer; }
+  .btn:hover{ background:var(--accent-dark); }
+  .btn.secondary{ background:transparent; color:var(--accent); border:1.5px solid var(--accent); }
+  .btn.secondary:hover{ background:rgba(62,105,144,.08); }
+  .btn.block{ width:100%; }
+  .btn:disabled{ background:var(--line); color:var(--ink-soft); cursor:not-allowed; }
+
+  .section-title{ font-size:13.5px; font-weight:800; margin:20px 0 9px; color:var(--ink); }
+  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .chip{ border:1.5px solid var(--line); background:#fff; border-radius:20px; padding:7px 14px; font-size:13px; font-weight:600; cursor:pointer; color:var(--ink-soft); }
+  .chip.active{ border-color:var(--accent); color:var(--accent); background:#EBF1F5; }
+  .chip:disabled{ opacity:.35; cursor:not-allowed; }
+  .count-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .count-btn{ border:1.5px solid var(--line); background:#fff; border-radius:9px; padding:10px 12px; font-size:13.5px; font-weight:700; cursor:pointer; color:var(--ink); flex:1; min-width:56px; text-align:center; }
+  .count-btn.active{ border-color:var(--mustard); background:#FBF1DD; }
+
+  .q-word{ font-size:25px; font-weight:800; margin-bottom:4px; word-break:break-word; }
+  .q-meaning{ font-size:20px; font-weight:700; margin-bottom:4px; line-height:1.4; }
+  .q-instr{ font-size:12px; color:var(--ink-soft); margin-bottom:16px; }
+
+  .opt-btn{
+    display:block; width:100%; text-align:left; background:#fff; border:1.5px solid var(--line);
+    border-radius:9px; padding:11px 14px; margin-bottom:8px; font-size:14px; cursor:pointer; font-weight:600; color:var(--ink);
+  }
+  .opt-btn:hover{ border-color:var(--accent); }
+  .opt-btn.correct{ border-color:var(--correct); background:#EFF7F1; color:var(--correct); }
+  .opt-btn.wrong{ border-color:var(--wrong); background:#FBEEF0; color:var(--wrong); }
+  .opt-btn:disabled{ cursor:default; }
+  .opt-dontknow{
+    border-style:dashed; border-color:var(--line); background:var(--paper);
+    color:var(--ink-soft); font-weight:700; text-align:center;
+  }
+  .opt-dontknow:hover{ border-color:var(--ink-soft); }
+  .opt-dontknow.wrong{ border-style:solid; }
+
+  .spell-input{
+    width:100%; font-size:18px; padding:13px 14px; border-radius:9px; border:1.5px solid var(--line);
+    font-family:'SFMono-Regular',Consolas,Menlo,monospace; margin-bottom:12px;
+  }
+  .spell-input:focus{ outline:none; border-color:var(--accent); }
+  .spell-input.correct{ border-color:var(--correct); background:#EFF7F1; }
+  .spell-input.wrong{ border-color:var(--wrong); background:#FBEEF0; }
+
+  .feedback-box{ margin-top:6px; padding:12px 14px; border-radius:9px; font-size:13.5px; font-weight:600; }
+  .feedback-box.correct{ background:#EFF7F1; color:var(--correct); }
+  .feedback-box.wrong{ background:#FBEEF0; color:var(--wrong); }
+  .feedback-answer{ font-weight:800; }
+
+  .footer-actions{ margin-top:16px; display:flex; gap:10px; }
+  .result-summary{ text-align:center; padding:8px 0 20px; }
+  .result-num{ font-size:42px; font-weight:900; color:var(--accent); }
+  .result-sub{ color:var(--ink-soft); font-size:13.5px; margin-top:2px; }
+
+  .word-row{ display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--line); gap:10px; }
+  .word-row:last-child{ border-bottom:none; }
+  .word-main{ font-weight:800; font-size:15px; }
+  .word-mean{ color:var(--ink-soft); font-size:12.5px; }
+  .word-count{ font-size:11.5px; color:var(--margin-red); font-weight:700; white-space:nowrap; text-align:right; }
+
+  .hist-row{ padding:12px 0; border-bottom:1px solid var(--line); }
+  .hist-row:last-child{ border-bottom:none; }
+  .hist-top{ display:flex; justify-content:space-between; font-size:13.5px; font-weight:700; }
+  .hist-sub{ font-size:12px; color:var(--ink-soft); margin-top:3px; }
+
+  .empty-note{ text-align:center; color:var(--ink-soft); font-size:14px; padding:30px 10px; }
+  .mode-btn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:10px; cursor:pointer;
+  }
+  .mode-btn.active{ border-color:var(--accent); background:#EBF1F5; }
+  .mode-btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .stage-bar{ height:8px; border-radius:5px; background:var(--line); overflow:hidden; }
+  .stage-bar-fill{ height:100%; background:linear-gradient(90deg, var(--mustard), var(--accent)); border-radius:5px; transition:width .3s ease; }
+
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(35,39,51,.5); z-index:100;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-box{
+    background:var(--card-bg); border-radius:18px; padding:30px 26px 26px; max-width:340px; width:100%;
+    text-align:center; box-shadow:0 16px 44px rgba(0,0,0,.28);
+    animation: modalPop .18s ease;
+  }
+  @keyframes modalPop{ from{ transform:scale(.92); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  .modal-icon{ font-size:40px; margin-bottom:8px; }
+  .modal-title{ font-size:19px; font-weight:800; }
+  .modal-answer{ font-size:14.5px; color:var(--ink-soft); margin-top:8px; }
+  .modal-answer b{ color:var(--ink); }
+
+  .busy-overlay{
+    position:fixed; inset:0; z-index:300; display:none;
+    align-items:center; justify-content:center;
+    background:rgba(250,249,245,.6); backdrop-filter:blur(1px); -webkit-backdrop-filter:blur(1px);
+  }
+  .busy-box{
+    background:var(--card-bg); border-radius:14px; padding:20px 30px;
+    box-shadow:0 10px 34px rgba(0,0,0,.18);
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+  }
+  .busy-spinner{
+    width:26px; height:26px; border:3px solid var(--line); border-top-color:var(--accent);
+    border-radius:50%; animation:busySpin .7s linear infinite;
+  }
+  @keyframes busySpin{ to{ transform:rotate(360deg); } }
+  .busy-text{ font-size:12.5px; color:var(--ink-soft); font-weight:700; }
+  .mode-btn .mtitle{ font-weight:800; font-size:14.5px; }
+  .mode-btn .mdesc{ font-size:12px; color:var(--ink-soft); }
+
+  .profile-btn{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    background:var(--card-bg); border:1.5px solid var(--line); border-radius:12px;
+    padding:16px 18px; margin-bottom:10px; cursor:pointer; font-size:15.5px; font-weight:700;
+  }
+  .profile-btn:hover{ border-color:var(--accent); }
+  .avatar{
+    width:34px; height:34px; border-radius:50%; background:var(--accent); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex-shrink:0;
+  }
+  .text-input{
+    width:100%; font-size:15px; padding:12px 14px; border-radius:9px; border:1.5px solid var(--line); margin-bottom:10px;
+  }
+  .text-input:focus{ outline:none; border-color:var(--accent); }
+  .loading{ padding:60px 20px; text-align:center; color:#6b7080; }
+</style>
+</head>
+<body>
+<div id="app"><div class="loading">불러오는 중...</div></div>
+
+<script>
+/* ---------------- 서버 통신 헬퍼 (아래 Supabase 데이터 레이어의 gsRun 사용) ---------------- */
+let busyCount = 0;
+function showBusy(text){
+  busyCount++;
+  let el = document.getElementById('busyOverlay');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'busyOverlay';
+    el.className = 'busy-overlay';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = `<div class="busy-box"><div class="busy-spinner"></div><div class="busy-text">${escHtml(text||'처리 중...')}</div></div>`;
+  el.style.display = 'flex';
+}
+function hideBusy(){
+  busyCount = Math.max(0, busyCount-1);
+  if(busyCount===0){
+    const el = document.getElementById('busyOverlay');
+    if(el) el.style.display = 'none';
+  }
+}
+
+const LEVELS = ["초등기본", "초등심화", "중등기본", "중등심화", "고등기본", "고등심화"];
+const LEGACY_LEVEL_MAP = { "초등": "초등기본", "중등": "중등기본" };
+function normalizeLevelClient(lv){ return LEGACY_LEVEL_MAP[lv] || lv; }
+const RANGES = [
+  {id:"AF", label:"A-F", test:c=>c>='a'&&c<='f'},
+  {id:"GM", label:"G-M", test:c=>c>='g'&&c<='m'},
+  {id:"NS", label:"N-S", test:c=>c>='n'&&c<='s'},
+  {id:"TZ", label:"T-Z", test:c=>c>='t'&&c<='z'}
+];
+function firstLetter(w){ return w.trim().charAt(0).toLowerCase(); }
+
+/* ================= Supabase 데이터 레이어 (Apps Script 대체) ================= */
+const SUPABASE_URL = 'https://fdrrdpiqsiypzwgbbeje.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_jXFu9qPnFiHUmMYREMRkOw_cKMnv8Y1';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function formatDT_(iso){
+  const d = new Date(iso);
+  const pad = n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+async function sbGetSetting(key){
+  const { data, error } = await sb.from('app_settings').select('value').eq('key', key).maybeSingle();
+  if(error) throw error;
+  return data ? data.value : null;
+}
+async function sbSetSetting(key, value){
+  const { error } = await sb.from('app_settings').upsert({ key, value:String(value) });
+  if(error) throw error;
+}
+
+async function apiGetWords(){
+  const { data, error } = await sb.from('words').select('word,meaning,level');
+  if(error) throw error;
+  return data.map(r=>({ w:r.word, k:r.meaning, level:r.level }));
+}
+async function apiGetProfiles(){
+  const { data, error } = await sb.from('profiles').select('id,name,default_level');
+  if(error) throw error;
+  return data.map(r=>({ id:r.id, name:r.name, defaultLevel:r.default_level }));
+}
+async function apiAddProfile(name, password){
+  name = (name||'').trim();
+  if(!name) throw new Error('이름을 입력해주세요.');
+  const level = LEVELS[0];
+  const pw = (password||'').trim() || '0000';
+  const { data: existing, error: exErr } = await sb.from('profiles').select('id,name,default_level').ilike('name', name);
+  if(exErr) throw exErr;
+  if(existing && existing.length>0){
+    const dup = existing[0];
+    return { id:dup.id, name:dup.name, defaultLevel:dup.default_level };
+  }
+  const { data, error } = await sb.from('profiles').insert({ name, password:pw, default_level:level }).select('id,name,default_level').single();
+  if(error) throw error;
+  return { id:data.id, name:data.name, defaultLevel:data.default_level };
+}
+async function apiCheckProfilePassword(userId, password){
+  const { data, error } = await sb.from('profiles').select('id').eq('id',userId).eq('password', String(password||'')).limit(1);
+  if(error) throw error;
+  return !!(data && data.length>0);
+}
+async function apiUpdateProfilePassword(userId, newPassword){
+  newPassword = (newPassword||'').trim();
+  if(!newPassword) throw new Error('새 비밀번호를 입력해주세요.');
+  const { error } = await sb.from('profiles').update({ password:newPassword }).eq('id',userId);
+  if(error) throw error;
+  return { ok:true };
+}
+async function apiResetProfilePassword(userId){
+  const { data, error } = await sb.from('profiles').update({ password:'0000' }).eq('id',userId).select('name').single();
+  if(error) throw error;
+  return { ok:true, name:data.name };
+}
+async function apiUpdateProfileName(userId, newName){
+  newName = (newName||'').trim();
+  if(!newName) throw new Error('이름을 입력해주세요.');
+  const { data: dup, error: dupErr } = await sb.from('profiles').select('id').neq('id',userId).ilike('name', newName);
+  if(dupErr) throw dupErr;
+  if(dup && dup.length>0) throw new Error('이미 사용 중인 이름이에요.');
+  const { error } = await sb.from('profiles').update({ name:newName }).eq('id',userId);
+  if(error) throw error;
+  return { id:userId, name:newName };
+}
+async function apiUpdateProfileDefaultLevel(userId, level){
+  if(LEVELS.indexOf(level)===-1) throw new Error('올바르지 않은 난이도입니다.');
+  const { data, error } = await sb.from('profiles').update({ default_level:level }).eq('id',userId).select('id,name,default_level').single();
+  if(error) throw error;
+  return { id:data.id, name:data.name, defaultLevel:data.default_level };
+}
+async function apiGetNotebook(userId){
+  const { data, error } = await sb.from('notebook').select('word,wrong_count,correct_streak').eq('user_id',userId);
+  if(error) throw error;
+  const wordsMap = {};
+  WORDS.forEach(w=>{ wordsMap[w.w]=w.k; });
+  return data.map(r=>({ word:r.word, k:wordsMap[r.word]||'', wrongCount:r.wrong_count, correctStreak:r.correct_streak }))
+    .sort((a,b)=>b.wrongCount-a.wrongCount);
+}
+async function apiGetUserStats(userId){
+  const { data, error } = await sb.from('rounds').select('total_words,correct_first_try').eq('user_id',userId);
+  if(error) throw error;
+  let total=0, correct=0;
+  data.forEach(r=>{ total+=r.total_words||0; correct+=r.correct_first_try||0; });
+  return { totalRounds:data.length, totalAnswered:total, totalCorrect:correct, accuracy: total?Math.round(correct/total*100):0 };
+}
+
+async function apiGetStageTargets_(){
+  const [mcq,e2k,k2e] = await Promise.all([sbGetSetting('stage_target_mcq'), sbGetSetting('stage_target_e2k'), sbGetSetting('stage_target_k2e')]);
+  return { mcq:Number(mcq)||8, e2k:Number(e2k)||3, k2e:Number(k2e)||3 };
+}
+async function apiGetStageTargetOverrides_(){
+  const raw = await sbGetSetting('stage_target_overrides');
+  if(!raw) return {};
+  try{ return JSON.parse(raw); }catch(e){ return {}; }
+}
+async function apiGetStageTargetsForLevel_(level){
+  const common = await apiGetStageTargets_();
+  if(!level) return common;
+  const overrides = await apiGetStageTargetOverrides_();
+  if(overrides[level]) return Object.assign({}, common, overrides[level]);
+  return common;
+}
+async function apiGetStageTargets(){ return JSON.stringify(await apiGetStageTargets_()); }
+async function apiSetStageTargets(mcq,e2k,k2e){
+  const vals = [['stage_target_mcq',mcq],['stage_target_e2k',e2k],['stage_target_k2e',k2e]];
+  for(const [k,v] of vals){
+    const n = Math.round(Number(v));
+    if(!n || n<1) throw new Error('목표 횟수는 1 이상의 숫자여야 해요.');
+    await sbSetSetting(k, n);
+  }
+  return await apiGetStageTargets_();
+}
+async function apiGetStageTargetOverride(level){
+  const common = await apiGetStageTargets_();
+  const overrides = await apiGetStageTargetOverrides_();
+  const ov = overrides[level];
+  return JSON.stringify({ level, hasOverride:!!ov, mcq:ov?ov.mcq:common.mcq, e2k:ov?ov.e2k:common.e2k, k2e:ov?ov.k2e:common.k2e });
+}
+async function apiSetStageTargetOverride(level, mcq, e2k, k2e){
+  const vals = {};
+  [['mcq',mcq],['e2k',e2k],['k2e',k2e]].forEach(([k,v])=>{
+    const n = Math.round(Number(v));
+    if(!n || n<1) throw new Error('목표 횟수는 1 이상의 숫자여야 해요.');
+    vals[k]=n;
+  });
+  const overrides = await apiGetStageTargetOverrides_();
+  overrides[level]=vals;
+  await sbSetSetting('stage_target_overrides', JSON.stringify(overrides));
+  return await apiGetStageTargetOverride(level);
+}
+async function apiClearStageTargetOverride(level){
+  const overrides = await apiGetStageTargetOverrides_();
+  delete overrides[level];
+  await sbSetSetting('stage_target_overrides', JSON.stringify(overrides));
+  return await apiGetStageTargetOverride(level);
+}
+
+async function apiGetStageStatus_(userId, level){
+  const target = await apiGetStageTargetsForLevel_(level);
+  const totalWordsInLevel = WORDS.filter(w=>w.level===level).length;
+  const { data, error } = await sb.from('progress').select('mcq_streak,e2k_streak,k2e_streak').eq('user_id',userId).eq('level',level);
+  if(error) throw error;
+  let mcqCount=0,e2kCount=0,k2eCount=0;
+  data.forEach(r=>{
+    if((r.mcq_streak||0) >= target.mcq) mcqCount++;
+    if((r.e2k_streak||0) >= target.e2k) e2kCount++;
+    if((r.k2e_streak||0) >= target.k2e) k2eCount++;
+  });
+  let stage;
+  if(totalWordsInLevel===0) stage='done';
+  else if(mcqCount<totalWordsInLevel) stage='mcq';
+  else if(e2kCount<totalWordsInLevel) stage='e2k';
+  else if(k2eCount<totalWordsInLevel) stage='k2e';
+  else stage='done';
+  return { level, stage, totalWordsInLevel, mcqCount, e2kCount, k2eCount, mcqTarget:target.mcq, e2kTarget:target.e2k, k2eTarget:target.k2e };
+}
+async function apiGetLevelProgress(userId, level){ return JSON.stringify(await apiGetStageStatus_(userId, level)); }
+async function apiGetProgressMap(userId, level){
+  const { data, error } = await sb.from('progress').select('word,mcq_streak,e2k_streak,k2e_streak').eq('user_id',userId).eq('level',level);
+  if(error) throw error;
+  const map = {};
+  data.forEach(r=>{ map[r.word] = { mcq:r.mcq_streak, e2k:r.e2k_streak, k2e:r.k2e_streak }; });
+  return JSON.stringify(map);
+}
+
+async function apiSubmitRoundResults(userId, settings, results){
+  const { data: nbRows, error: nbErr } = await sb.from('notebook').select('id,word,wrong_count,correct_streak').eq('user_id', userId);
+  if(nbErr) throw nbErr;
+  const nbMap = {};
+  nbRows.forEach(r=>{ nbMap[r.word] = { id:r.id, wrongCount:r.wrong_count, correctStreak:r.correct_streak }; });
+  const mastered = [];
+  const wrongSet = {};
+  const nbToDelete = [];
+  results.forEach(r=>{
+    const w=r.w, correct=!!r.correct;
+    let entry = nbMap[w];
+    if(correct){
+      if(entry){
+        entry.correctStreak = (entry.correctStreak||0)+1;
+        if(entry.correctStreak>=2){
+          mastered.push(w);
+          if(entry.id) nbToDelete.push(entry.id);
+          delete nbMap[w];
+        }
+      }
+    } else {
+      wrongSet[w]=true;
+      if(entry){ entry.wrongCount=(entry.wrongCount||0)+1; entry.correctStreak=0; }
+      else { nbMap[w] = { id:null, wrongCount:1, correctStreak:0 }; }
+    }
+  });
+  const nbToUpsert = Object.keys(nbMap).filter(w=>!nbToDelete.includes(nbMap[w].id)).map(w=>{
+    const e = nbMap[w];
+    return { user_id:userId, word:w, wrong_count:e.wrongCount, correct_streak:e.correctStreak, last_wrong_at: e.wrongCount>0 ? new Date().toISOString() : null };
+  });
+  if(nbToUpsert.length){ const { error } = await sb.from('notebook').upsert(nbToUpsert, { onConflict:'user_id,word' }); if(error) throw error; }
+  if(nbToDelete.length){ const { error } = await sb.from('notebook').delete().in('id', nbToDelete); if(error) throw error; }
+
+  const wrongWords = Object.keys(wrongSet);
+  const totalWords = new Set(results.map(r=>r.w)).size;
+  const correctFirstTry = results.filter(r=>r.correct && !r.requeued).length;
+  const levelsStr = (Array.isArray(settings.levels) && settings.levels.length>0) ? settings.levels.slice().sort().join(',') : '';
+
+  if(!settings.isReview){
+    const wordLevelMap = {};
+    WORDS.forEach(w=>{ wordLevelMap[w.w]=w.level; });
+    const { data: pgRows, error: pgErr } = await sb.from('progress').select('id,word,level,mcq_streak,e2k_streak,k2e_streak').eq('user_id',userId);
+    if(pgErr) throw pgErr;
+    const pgMap = {};
+    pgRows.forEach(r=>{ pgMap[r.word] = { level:r.level, mcq:r.mcq_streak, e2k:r.e2k_streak, k2e:r.k2e_streak }; });
+    results.forEach(r=>{
+      let e = pgMap[r.w];
+      if(!e){ e = { level: wordLevelMap[r.w]||LEVELS[0], mcq:0, e2k:0, k2e:0 }; pgMap[r.w]=e; }
+      const field = r.type;
+      if(field==='mcq' || field==='e2k' || field==='k2e') e[field] = r.correct ? (e[field]||0)+1 : 0;
+    });
+    const pgUpsert = Object.keys(pgMap).map(w=>{
+      const e = pgMap[w];
+      return { user_id:userId, word:w, level:e.level, mcq_streak:e.mcq, e2k_streak:e.e2k, k2e_streak:e.k2e, last_answered:new Date().toISOString() };
+    });
+    if(pgUpsert.length){ const { error } = await sb.from('progress').upsert(pgUpsert, { onConflict:'user_id,word' }); if(error) throw error; }
+  }
+
+  const { error: rndErr } = await sb.from('rounds').insert({
+    user_id:userId, question_type:settings.questionType, spell_direction:settings.spellDirection,
+    mcq_option_count:settings.mcqOptionCount, total_words:totalWords, correct_first_try:correctFirstTry,
+    wrong_words: wrongWords.join(', '), mastered_words: mastered.join(', '), levels: levelsStr
+  });
+  if(rndErr) throw rndErr;
+
+  const { data: profRow, error: profErr } = await sb.from('profiles').select('id,default_level').eq('id',userId).single();
+  if(profErr) throw profErr;
+  const currentLevel = LEVELS.includes(profRow.default_level) ? profRow.default_level : LEVELS[0];
+  const idx = LEVELS.indexOf(currentLevel);
+  let levelUp;
+  if(idx !== -1 && idx !== LEVELS.length-1){
+    const status = await apiGetStageStatus_(userId, currentLevel);
+    if(status.stage==='done' && status.totalWordsInLevel>0){
+      const newLevel = LEVELS[idx+1];
+      await sb.from('profiles').update({ default_level:newLevel }).eq('id',userId);
+      levelUp = Object.assign({ leveledUp:true, newLevel, from:currentLevel }, status);
+    } else {
+      levelUp = Object.assign({ leveledUp:false }, status);
+    }
+  } else {
+    levelUp = Object.assign({ leveledUp:false }, await apiGetStageStatus_(userId, currentLevel));
+  }
+
+  return { notebook: await apiGetNotebook(userId), mastered, stats: await apiGetUserStats(userId), levelUp };
+}
+
+async function apiGetAdminSettings(){
+  const [model, apiKey] = await Promise.all([sbGetSetting('gemini_model'), sbGetSetting('gemini_api_key')]);
+  return { geminiModel: model || 'gemini-3.1-flash-lite', hasApiKey: !!(apiKey && apiKey.trim()) };
+}
+async function apiSetGeminiModel(model){
+  model = (model||'').trim();
+  if(!model) throw new Error('모델명을 입력해주세요.');
+  await sbSetSetting('gemini_model', model);
+  return await apiGetAdminSettings();
+}
+async function apiCheckAdminPassword(password){
+  const stored = (await sbGetSetting('admin_password')) || 'admin';
+  return stored === String(password||'');
+}
+async function apiSetAdminPassword(newPassword){
+  newPassword = (newPassword||'').trim();
+  if(!newPassword) throw new Error('새 비밀번호를 입력해주세요.');
+  await sbSetSetting('admin_password', newPassword);
+  return { ok:true };
+}
+async function apiGetAllRoundsAdmin(limit){
+  limit = limit||300;
+  const [{data:rows,error},{data:profs,error:pErr}] = await Promise.all([
+    sb.from('rounds').select('ts,user_id,question_type,spell_direction,mcq_option_count,total_words,correct_first_try,wrong_words,mastered_words,levels').order('ts',{ascending:false}).limit(limit),
+    sb.from('profiles').select('id,name')
+  ]);
+  if(error) throw error;
+  if(pErr) throw pErr;
+  const nameById = {}; profs.forEach(p=>{ nameById[p.id]=p.name; });
+  const out = rows.map(r=>({
+    ts:new Date(r.ts).getTime(), datetime:formatDT_(r.ts),
+    userId:r.user_id, userName:nameById[r.user_id]||'(알 수 없음)',
+    questionType:r.question_type, spellDirection:r.spell_direction, mcqOptionCount:r.mcq_option_count,
+    totalWords:r.total_words, correctFirstTry:r.correct_first_try,
+    wrongWords:r.wrong_words||'', masteredWords:r.mastered_words||'', levels:r.levels||''
+  }));
+  return JSON.stringify(out);
+}
+async function apiGetRoundHistory(userId, limit){
+  limit = limit||30;
+  const { data, error } = await sb.from('rounds').select('ts,question_type,spell_direction,mcq_option_count,total_words,correct_first_try,wrong_words,mastered_words,levels').eq('user_id',userId).order('ts',{ascending:false}).limit(limit);
+  if(error) throw error;
+  const out = data.map(r=>({
+    ts:new Date(r.ts).getTime(), datetime:formatDT_(r.ts),
+    questionType:r.question_type, spellDirection:r.spell_direction, mcqOptionCount:r.mcq_option_count,
+    totalWords:r.total_words, correctFirstTry:r.correct_first_try, wrongWords:r.wrong_words||'', masteredWords:r.mastered_words||'', levels:r.levels||''
+  }));
+  return JSON.stringify(out);
+}
+async function apiDebugRoundsData(userId){
+  const { data: rows, error } = await sb.from('rounds').select('user_id').limit(2000);
+  if(error) throw error;
+  let matched=0; const sample=[];
+  rows.forEach(r=>{
+    if(String(r.user_id)===String(userId)) matched++;
+    if(!sample.includes(r.user_id) && sample.length<6) sample.push(r.user_id);
+  });
+  const { data: profs } = await sb.from('profiles').select('id,name');
+  return {
+    currentProfileId:String(userId), roundsHeader:['ts','...'], roundsTotalRows:rows.length,
+    roundsMatchedForThisProfile:matched, roundsSampleUserIds:sample,
+    allProfiles:(profs||[]).map(p=>({id:p.id,name:p.name}))
+  };
+}
+async function apiGetLeaderboard(){
+  const [{data:profs,error:pErr},{data:rounds,error:rErr},{data:progress,error:prErr}] = await Promise.all([
+    sb.from('profiles').select('id,name,default_level'),
+    sb.from('rounds').select('user_id,correct_first_try'),
+    sb.from('progress').select('user_id,level,mcq_streak,e2k_streak,k2e_streak')
+  ]);
+  if(pErr) throw pErr; if(rErr) throw rErr; if(prErr) throw prErr;
+  const byId = {};
+  profs.forEach(p=>{ byId[p.id] = { name:p.name, level:p.default_level, levelIndex:LEVELS.indexOf(p.default_level), totalCorrect:0, masteredWordCount:0 }; });
+  rounds.forEach(r=>{ const p=byId[r.user_id]; if(p) p.totalCorrect += r.correct_first_try||0; });
+  const targetCache = {};
+  for(const row of progress){
+    const p = byId[row.user_id];
+    if(!p) continue;
+    if(!targetCache[row.level]) targetCache[row.level] = await apiGetStageTargetsForLevel_(row.level);
+    const t = targetCache[row.level];
+    if((row.mcq_streak||0)>=t.mcq && (row.e2k_streak||0)>=t.e2k && (row.k2e_streak||0)>=t.k2e) p.masteredWordCount++;
+  }
+  const list = Object.values(byId).sort((a,b)=>{
+    if(b.levelIndex!==a.levelIndex) return b.levelIndex-a.levelIndex;
+    if(b.totalCorrect!==a.totalCorrect) return b.totalCorrect-a.totalCorrect;
+    return b.masteredWordCount-a.masteredWordCount;
+  });
+  list.forEach((p,i)=>{ p.rank=i+1; });
+  return JSON.stringify(list);
+}
+async function apiCheckMeaningWithAI(word, correctK, userAnswer){
+  const apiKey = await sbGetSetting('gemini_api_key');
+  if(!apiKey) throw new Error('GEMINI_API_KEY가 설정되어 있지 않아요. 관리자 설정에서 등록해주세요.');
+  const model = (await sbGetSetting('gemini_model')) || 'gemini-3.1-flash-lite';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const prompt = `너는 중고등학생 영어 단어 시험을 채점하는 채점자야.\n영어 단어: "${word}"\n사전에 등록된 뜻(참고용, 표현이 정확히 같지 않아도 의미가 통하면 정답으로 인정): "${correctK}"\n학생이 입력한 한글 답: "${userAnswer}"\n학생의 답이 이 영어 단어의 뜻으로 의미상 타당하면 correct를 true로, 명백히 틀렸거나 다른 단어의 뜻이면 false로 판정해.\n반드시 아래 JSON 형식으로만 답해. 다른 설명이나 텍스트는 절대 포함하지 마: {"correct": true} 또는 {"correct": false}`;
+  const res = await fetch(url, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{temperature:0,maxOutputTokens:20} })
+  });
+  if(!res.ok){ const txt = await res.text(); throw new Error(`Gemini API 오류 (HTTP ${res.status}): ${txt.slice(0,200)}`); }
+  const data = await res.json();
+  const text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+  if(!text) throw new Error('Gemini 응답을 파싱할 수 없어요.');
+  const m = text.match(/\{[^}]*\}/);
+  if(!m) throw new Error('Gemini 응답 형식이 예상과 달라요: '+text.slice(0,200));
+  const parsed = JSON.parse(m[0]);
+  return { correct: !!parsed.correct };
+}
+
+const API = {
+  getWords: apiGetWords, getProfiles: apiGetProfiles, addProfile: apiAddProfile,
+  checkProfilePassword: apiCheckProfilePassword, updateProfilePassword: apiUpdateProfilePassword,
+  resetProfilePassword: apiResetProfilePassword, updateProfileName: apiUpdateProfileName,
+  updateProfileDefaultLevel: apiUpdateProfileDefaultLevel, getNotebook: apiGetNotebook,
+  getUserStats: apiGetUserStats, getLevelProgress: apiGetLevelProgress, getProgressMap: apiGetProgressMap,
+  submitRoundResults: apiSubmitRoundResults, getAdminSettings: apiGetAdminSettings,
+  setGeminiModel: apiSetGeminiModel, getStageTargets: apiGetStageTargets, setStageTargets: apiSetStageTargets,
+  getStageTargetOverride: apiGetStageTargetOverride, setStageTargetOverride: apiSetStageTargetOverride,
+  clearStageTargetOverride: apiClearStageTargetOverride, checkAdminPassword: apiCheckAdminPassword,
+  setAdminPassword: apiSetAdminPassword, getAllRoundsAdmin: apiGetAllRoundsAdmin,
+  getRoundHistory: apiGetRoundHistory, debugRoundsData: apiDebugRoundsData,
+  getLeaderboard: apiGetLeaderboard, checkMeaningWithAI: apiCheckMeaningWithAI
+};
+function gsRun(fnName, ...args){
+  const label = fnName.toLowerCase().startsWith('get') ? '불러오는 중...' : '처리 중...';
+  showBusy(label);
+  const fn = API[fnName];
+  if(!fn) { hideBusy(); return Promise.reject(new Error('알 수 없는 함수: '+fnName)); }
+  return Promise.resolve().then(()=>fn(...args)).then(res=>{ hideBusy(); return res; }).catch(err=>{ hideBusy(); throw err; });
+}
+/* ================= /Supabase 데이터 레이어 끝 ================= */
+
+
+let WORDS = [];
+let PROFILES = [];
+let state = { screen:"loading", soundEnabled: (localStorage.getItem('wm_sound') !== 'off') };
+
+/* ---------------- 효과음 (아케이드 느낌, 오디오 파일 없이 코드로 생성) ---------------- */
+let audioCtx = null;
+function getAudioCtx(){
+  if(!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    audioCtx = new AC();
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function beep(ctx, freq, startOffset, duration, type, peakGain){
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type = type || 'square';
+  const t0 = ctx.currentTime + startOffset;
+  o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(peakGain || 0.14, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t0);
+  o.stop(t0 + duration + 0.03);
+}
+function playCorrectSound(){
+  if(!state.soundEnabled) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    // 상승하는 3음 아르페지오 (동전/코인 획득 느낌)
+    beep(ctx, 523.25, 0.00, 0.09, 'square', 0.11);
+    beep(ctx, 659.25, 0.07, 0.09, 'square', 0.11);
+    beep(ctx, 783.99, 0.14, 0.18, 'square', 0.13);
+  }catch(e){ /* 오디오를 지원 안 하는 환경이면 그냥 무시 */ }
+}
+function playWrongSound(){
+  if(!state.soundEnabled) return;
+  try{
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    // 하강하는 2음 buzz (아케이드 실패음 느낌)
+    beep(ctx, 220, 0.00, 0.11, 'sawtooth', 0.11);
+    beep(ctx, 146.83, 0.09, 0.20, 'sawtooth', 0.12);
+  }catch(e){ /* 오디오를 지원 안 하는 환경이면 그냥 무시 */ }
+}
+function toggleSound(){
+  state.soundEnabled = !state.soundEnabled;
+  localStorage.setItem('wm_sound', state.soundEnabled ? 'on' : 'off');
+  if(state.soundEnabled){
+    // 켜는 시점에 사용자 제스처가 있으니 오디오 컨텍스트를 미리 깨워둠 + 확인용 짧은 소리
+    try{ const ctx = getAudioCtx(); if(ctx) beep(ctx, 659.25, 0, 0.1, 'square', 0.1); }catch(e){}
+  }
+  render();
+}
+let profile = null; // {id, name}
+let notebookCache = [];
+let statsCache = { totalRounds:0, totalAnswered:0, totalCorrect:0, accuracy:0 };
+let levelProgressCache = null; // { level, masteredCount, totalWordsInLevel, target }
+
+const appEl = document.getElementById('app');
+
+/* ---------------- 초기화 ---------------- */
+(async function init(){
+  try{
+    const [words, profiles] = await Promise.all([gsRun('getWords'), gsRun('getProfiles')]);
+    WORDS = words;
+    PROFILES = profiles;
+    const savedId = localStorage.getItem('wm_profile_id');
+    const saved = savedId ? PROFILES.find(p=>p.id===savedId) : null;
+    if(saved){
+      goProfileAuth(saved); // 기기에 기억된 프로필이어도 비밀번호는 매번 확인
+    } else {
+      state.screen = "profile";
+      render();
+    }
+  }catch(e){
+    appEl.innerHTML = `<div class="loading">불러오기에 실패했어요. 새로고침 해주세요.<br><span style="font-size:12px;">${escHtml(String(e))}</span></div>`;
+  }
+})();
+
+function escHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+/** 서버 응답을 기다리며 화면이 바뀌기 전에 키보드를 먼저 내려서, 키보드 닫히는 애니메이션과
+ *  화면 재렌더링이 겹쳐 엉뚱한 곳이 눌리는 현상을 줄여줘요. */
+function blurActive(){
+  if(document.activeElement && typeof document.activeElement.blur === 'function'){
+    document.activeElement.blur();
+  }
+}
+function escStr(s){ return String(s).replace(/'/g,"\\'"); }
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function findWord(w){ return WORDS.find(x=>x.w===w); }
+function isPhrase(w){ return String(w||"").trim().indexOf(' ') !== -1; }
+function getDistractors(correct, n){
+  const wantPhrase = isPhrase(correct.w);
+  const sameType = WORDS.filter(x=>x.w!==correct.w && isPhrase(x.w)===wantPhrase);
+  // 숙어는 숙어끼리, 단어는 단어끼리 섞어야 "형태만 보고 정답을 짐작"하는 걸 막을 수 있어요.
+  // 해당 범위에 같은 부류가 부족할 때만 전체 풀로 보충해요.
+  const pool = sameType.length >= n ? sameType : WORDS.filter(x=>x.w!==correct.w);
+  return shuffle(pool).slice(0,n).map(x=>x.k);
+}
+function normalizeKo(s){ return (s||"").replace(/\s+/g,"").replace(/[.!?~()]/g,""); }
+
+const KO_ENDINGS = ["스럽다","스러운","적이다","적인","하다","되다","한","히","는","을","를","이","가","은","다"];
+function stripKoEnding(s){
+  for(const e of KO_ENDINGS){
+    if(s.length>e.length+1 && s.endsWith(e)) return s.slice(0, -e.length);
+  }
+  return s;
+}
+function levenshtein(a,b){
+  const m=a.length, n=b.length;
+  if(m===0) return n; if(n===0) return m;
+  const dp = Array.from({length:m+1}, (_,i)=>[i, ...Array(n).fill(0)]);
+  for(let j=0;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++){
+    for(let j=1;j<=n;j++){
+      dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+function toleranceFor(len){ return len<=3 ? 0 : (len<=6 ? 1 : 2); }
+
+/** 정확 일치 / 흔한 어미 변형 / 사소한 오타(편집 거리) / 부분 포함 까지 로컬에서 관대하게 판정.
+ *  이걸로도 애매하면 false를 반환하고, 호출부에서 AI로 한 번 더 확인해요. */
+function fuzzyCheckKorean(input, correctK){
+  const iNorm = normalizeKo(input);
+  if(!iNorm) return false;
+  const parts = correctK.split(/[,\/]/).map(p=>normalizeKo(p)).filter(Boolean);
+  for(const p of parts){
+    if(p===iNorm) return true;
+    if(stripKoEnding(p)===stripKoEnding(iNorm)) return true;
+    if(iNorm.length>=2 && (p.includes(iNorm) || iNorm.includes(p))) return true;
+    if(levenshtein(p, iNorm) <= toleranceFor(p.length)) return true;
+  }
+  return false;
+}
+function checkKoreanAnswer(input, correctK){
+  const norm = normalizeKo(input);
+  if(!norm) return false;
+  const parts = correctK.split(/[,\/]/).map(p=>normalizeKo(p)).filter(Boolean);
+  return parts.some(p => p===norm);
+}
+
+/* ---------------- 프로필 ---------------- */
+async function selectProfile(p, skipReload){
+  profile = p;
+  localStorage.setItem('wm_profile_id', p.id);
+  state.screen = "home";
+  appEl.innerHTML = `<div class="loading">${escHtml(p.name)}님 정보를 불러오는 중...</div>`;
+  const [nb, stats, lpRaw] = await Promise.all([
+    gsRun('getNotebook', p.id),
+    gsRun('getUserStats', p.id),
+    gsRun('getLevelProgress', p.id, p.defaultLevel || '초등기본')
+  ]);
+  notebookCache = nb;
+  statsCache = stats;
+  try{ levelProgressCache = lpRaw ? JSON.parse(lpRaw) : null; }catch(e){ levelProgressCache = null; }
+  render();
+}
+
+/* ---------------- 프로필 비밀번호 인증 ---------------- */
+function goProfileAuth(p){
+  state.screen = "profile-auth";
+  state.authTarget = p;
+  state.authError = null;
+  render();
+}
+async function submitProfileAuth(){
+  const inp = document.getElementById('profileAuthInput');
+  const pw = inp ? inp.value : "";
+  const btn = document.getElementById('profileAuthBtn');
+  if(btn) btn.disabled = true;
+  blurActive(); // 서버 응답 기다리는 동안 키보드를 먼저 내려서 화면이 안 흔들리게 함
+  try{
+    const ok = await gsRun('checkProfilePassword', state.authTarget.id, pw);
+    if(ok){
+      await selectProfile(state.authTarget);
+    } else {
+      state.authError = "비밀번호가 틀렸어요. 다시 입력해주세요.";
+      render();
+    }
+  }catch(e){
+    state.authError = "확인에 실패했어요: " + errText(e);
+    render();
+  }
+}
+function cancelProfileAuth(){
+  state.authTarget = null;
+  state.authError = null;
+  state.screen = "profile";
+  render();
+}
+function renderProfileAuth(){
+  const p = state.authTarget;
+  const initials = n => n.trim().charAt(0).toUpperCase();
+  appEl.innerHTML = `
+    <div class="nav-row"><button class="link-btn" onclick="cancelProfileAuth()">&larr; 목록으로</button></div>
+    <div style="text-align:center;margin:20px 0 24px;">
+      <span class="avatar" style="width:56px;height:56px;font-size:22px;">${initials(p.name)}</span>
+      <h1 style="font-size:20px;margin-top:12px;">${escHtml(p.name)}님</h1>
+      <p class="subtitle" style="margin:4px 0 0;">비밀번호를 입력해주세요.</p>
+    </div>
+    <input id="profileAuthInput" class="text-input" type="password" inputmode="numeric" placeholder="비밀번호" autofocus
+      onkeydown="if(event.key==='Enter') submitProfileAuth()">
+    ${state.authError ? `<p style="color:var(--wrong);font-size:12.5px;margin:4px 0 0;">${escHtml(state.authError)}</p>` : ''}
+    <button id="profileAuthBtn" class="btn block" style="margin-top:14px;" onclick="submitProfileAuth()">확인</button>
+  `;
+  const inp = document.getElementById('profileAuthInput');
+  if(inp) inp.focus();
+}
+
+/* ---------------- 비밀번호 변경 ---------------- */
+function goProfileSettings(){
+  state.screen = "profile-settings";
+  state.pwChangeError = null;
+  state.pwChangeSaved = false;
+  state.nameChangeError = null;
+  state.nameChangeSaved = false;
+  render();
+}
+async function submitChangePassword(){
+  const p1 = document.getElementById('newPwInput').value;
+  const p2 = document.getElementById('newPwConfirmInput').value;
+  if(!p1 || !p2){ state.pwChangeError = "비밀번호를 입력해주세요."; state.pwChangeSaved=false; render(); return; }
+  if(p1 !== p2){ state.pwChangeError = "비밀번호가 서로 달라요."; state.pwChangeSaved=false; render(); return; }
+  blurActive();
+  try{
+    await gsRun('updateProfilePassword', profile.id, p1);
+    state.pwChangeError = null;
+    state.pwChangeSaved = true;
+    render();
+  }catch(e){
+    state.pwChangeError = "변경에 실패했어요: " + errText(e);
+    state.pwChangeSaved = false;
+    render();
+  }
+}
+async function submitChangeName(){
+  const nameInput = document.getElementById('newNameInput');
+  const newName = (nameInput.value||"").trim();
+  if(!newName){ state.nameChangeError = "이름을 입력해주세요."; state.nameChangeSaved=false; render(); return; }
+  blurActive();
+  try{
+    const res = await gsRun('updateProfileName', profile.id, newName);
+    profile.name = res.name;
+    const idx = PROFILES.findIndex(x=>x.id===profile.id);
+    if(idx>=0) PROFILES[idx].name = res.name;
+    state.nameChangeError = null;
+    state.nameChangeSaved = true;
+    render();
+  }catch(e){
+    state.nameChangeError = errText(e);
+    state.nameChangeSaved = false;
+    render();
+  }
+}
+function renderProfileSettings(){
+  appEl.innerHTML = `
+    <div class="nav-row"><button class="link-btn" onclick="goHome()">&larr; 홈으로</button></div>
+    <h1 style="font-size:22px;">프로필 설정</h1>
+    <p class="subtitle">이름과 비밀번호를 각각 바꿀 수 있어요. 바꾸고 싶은 것만 저장하면 돼요.</p>
+
+    <div class="settings-card">
+      <div class="settings-card-title"><span class="sc-icon">✏️</span> 이름 변경</div>
+      <input id="newNameInput" class="text-input" value="${escHtml(profile.name)}" placeholder="이름" onkeydown="if(event.key==='Enter') submitChangeName()">
+      ${state.nameChangeError ? `<p style="color:var(--wrong);font-size:12.5px;margin:4px 0 0;">${escHtml(state.nameChangeError)}</p>` : ''}
+      ${state.nameChangeSaved ? `<p style="color:var(--correct);font-size:12.5px;margin:4px 0 0;">✅ 이름이 바뀌었어요.</p>` : ''}
+      <button class="btn block" style="margin-top:10px;" onclick="submitChangeName()">이름 저장</button>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-title"><span class="sc-icon">🔑</span> 비밀번호 변경</div>
+      <input id="newPwInput" class="text-input" type="password" inputmode="numeric" placeholder="새 비밀번호">
+      <input id="newPwConfirmInput" class="text-input" type="password" inputmode="numeric" placeholder="새 비밀번호 확인" onkeydown="if(event.key==='Enter') submitChangePassword()">
+      ${state.pwChangeError ? `<p style="color:var(--wrong);font-size:12.5px;margin:4px 0 0;">${escHtml(state.pwChangeError)}</p>` : ''}
+      ${state.pwChangeSaved ? `<p style="color:var(--correct);font-size:12.5px;margin:4px 0 0;">✅ 비밀번호가 변경됐어요.</p>` : ''}
+      <button class="btn block" style="margin-top:10px;" onclick="submitChangePassword()">비밀번호 저장</button>
+    </div>
+  `;
+}
+
+async function createProfile(){
+  const input = document.getElementById('newProfileInput');
+  const pwInput = document.getElementById('newProfilePwInput');
+  const pwConfirmInput = document.getElementById('newProfilePwConfirmInput');
+  const name = (input.value||"").trim();
+  if(!name) return;
+  const pw1 = pwInput ? pwInput.value : "";
+  const pw2 = pwConfirmInput ? pwConfirmInput.value : "";
+  if(pw1 || pw2){
+    if(pw1 !== pw2){ alert('비밀번호가 서로 달라요.'); return; }
+  }
+  input.disabled = true;
+  blurActive();
+  try{
+    const p = await gsRun('addProfile', name, pw1);
+    if(!PROFILES.find(x=>x.id===p.id)) PROFILES.push(p);
+    await selectProfile(p);
+  }catch(e){
+    alert('프로필 생성에 실패했어요: ' + e);
+    input.disabled = false;
+  }
+}
+function switchProfile(){
+  localStorage.removeItem('wm_profile_id');
+  profile = null;
+  state.screen = "profile";
+  render();
+}
+
+/* ---------------- 출제 확률 가중치 (등급별 연속 정답 streak 기반) ---------------- */
+function progressWeight(streak){
+  // 10회 이상 연속 정답이면 아주 낮은 확률로만 가끔 등장, 그 전에는 streak가 높을수록 확률이 낮아짐
+  return streak >= 10 ? 0.05 : 1 / (streak + 1);
+}
+function weightedSample(items, n, weightFn){
+  const pool = items.map(it => ({ it, w: Math.max(0.0001, weightFn(it)) }));
+  const picked = [];
+  const count = Math.min(n, pool.length);
+  for(let k=0; k<count; k++){
+    const total = pool.reduce((s,p)=>s+p.w, 0);
+    let r = Math.random() * total;
+    let idx = 0;
+    for(; idx<pool.length; idx++){ r -= pool[idx].w; if(r<=0) break; }
+    if(idx>=pool.length) idx = pool.length-1;
+    picked.push(pool[idx].it);
+    pool.splice(idx,1);
+  }
+  return picked;
+}
+
+/* ---------------- 라운드(퀴즈) 로직 ---------------- */
+function startRound(wordList, settings){
+  state.screen = "quiz";
+  state.questionType = settings.questionType;
+  state.spellDirection = settings.spellDirection;
+  state.mcqOptionCount = settings.mcqOptionCount || 8;
+  state.roundLevels = settings.levels || [];
+  state.roundIsReview = !!settings.isReview;
+  state.queue = shuffle(wordList).map(w=>({...w, requeued:false}));
+  state.roundTotal = state.queue.length;
+  state.roundWrongSet = new Set();
+  state.results = []; // {w, correct, requeued, type}
+  state.levelUpInfo = null;
+  nextQuestion();
+}
+
+function nextQuestion(){
+  if(state.queue.length===0){ finishRound(); return; }
+  const item = state.queue.shift();
+  state.current = item;
+  state.answered = false;
+  state.aiChecking = false;
+  state.aiRetryMsg = null;
+  state.aiErrorDetail = null;
+  state.aiFailed = false;
+  state.aiAttempts = 0;
+
+  state.currentType = state.questionType==="mixed" ? (Math.random()<0.5?"mcq":"spell") : state.questionType;
+  if(state.currentType==="mcq"){
+    const n = Math.max(1, (state.mcqOptionCount||8) - 1);
+    state.options = shuffle([item.k, ...getDistractors(item,n)]);
+  } else {
+    state.currentDirection = state.spellDirection==="mixed" ? (Math.random()<0.5?"k2e":"e2k") : state.spellDirection;
+  }
+  render();
+}
+
+function currentAnswerType(){
+  if(state.currentType==="mcq") return "mcq";
+  return state.currentDirection; // 'e2k' | 'k2e'
+}
+function submitAnswer(userCorrect, entry){
+  if(state.answered) return;
+  state.answered = true;
+  state.wasCorrect = userCorrect;
+  state.results.push({ w: entry.w, correct: userCorrect, requeued: !!entry.requeued, type: currentAnswerType() });
+  if(userCorrect) playCorrectSound(); else playWrongSound();
+  if(!userCorrect){
+    state.roundWrongSet.add(entry.w);
+    if(!entry.requeued) state.queue.push({...entry, requeued:true});
+  }
+  render();
+}
+
+async function finishRound(){
+  state.screen = "result";
+  state.submitting = true;
+  render();
+  try{
+    const res = await gsRun('submitRoundResults', profile.id, {
+      questionType: state.questionType,
+      spellDirection: state.spellDirection,
+      mcqOptionCount: state.mcqOptionCount,
+      levels: state.roundLevels || [],
+      isReview: !!state.roundIsReview
+    }, state.results);
+    notebookCache = res.notebook;
+    statsCache = res.stats;
+    state.masteredThisRound = res.mastered || [];
+    if(res.levelUp && res.levelUp.leveledUp){
+      profile.defaultLevel = res.levelUp.newLevel;
+      const idx = PROFILES.findIndex(x=>x.id===profile.id);
+      if(idx>=0) PROFILES[idx].defaultLevel = res.levelUp.newLevel;
+      state.levelUpInfo = res.levelUp;
+    } else {
+      state.levelUpInfo = null;
+    }
+    if(res.levelUp && typeof res.levelUp.totalWordsInLevel === 'number'){
+      levelProgressCache = res.levelUp;
+    }
+  }catch(e){
+    state.masteredThisRound = [];
+    state.saveError = true;
+    state.levelUpInfo = null;
+  }
+  state.submitting = false;
+  render();
+}
+
+/* ---------------- 렌더 ---------------- */
+function render(){
+  if(state.screen==="profile") return renderProfileScreen();
+  if(state.screen==="profile-auth") return renderProfileAuth();
+  if(state.screen==="profile-settings") return renderProfileSettings();
+  if(state.screen==="home") return renderHome();
+  if(state.screen==="setup") return renderSetup();
+  if(state.screen==="quiz") return renderQuiz();
+  if(state.screen==="result") return renderResult();
+  if(state.screen==="notebook") return renderNotebook();
+  if(state.screen==="history") return renderHistory();
+  if(state.screen==="leaderboard") return renderLeaderboard();
+  if(state.screen==="settings") return renderSettings();
+  if(state.screen==="admin-auth") return renderAdminAuth();
+  if(state.screen==="admin-person") return renderAdminPerson();
+}
+
+function renderProfileScreen(){
+  const initials = n => n.trim().charAt(0).toUpperCase();
+  appEl.innerHTML = `
+    <p class="eyebrow">단어 마스터 노트</p>
+    <h1>누가 학습할까요?</h1>
+    <p class="subtitle">각자 프로필로 들어가면 오답노트와 기록이 따로 저장돼요.</p>
+    ${PROFILES.map(p=>`
+      <button class="profile-btn" onclick='goProfileAuth(${JSON.stringify(p)})'>
+        <span class="avatar">${initials(p.name)}</span>
+        <span>${escHtml(p.name)}<br><span style="font-weight:500;font-size:11.5px;color:var(--ink-soft);">${p.defaultLevel||'초등기본'}</span></span>
+      </button>
+    `).join('')}
+    <div class="section-title">새 프로필 만들기</div>
+    <p style="font-size:11.5px;color:var(--ink-soft);margin:-2px 0 8px;">난이도는 초등기본부터 자동으로 시작해요. 등급 조정은 관리자 설정에서만 가능해요.</p>
+    <input id="newProfileInput" class="text-input" placeholder="이름 입력...">
+    <input id="newProfilePwInput" class="text-input" type="password" inputmode="numeric" placeholder="비밀번호 (비워두면 0000)">
+    <input id="newProfilePwConfirmInput" class="text-input" type="password" inputmode="numeric" placeholder="비밀번호 확인" onkeydown="if(event.key==='Enter') createProfile()">
+    <button class="btn block" onclick="createProfile()">프로필 추가</button>
+  `;
+}
+
+function accuracyPct(){ return statsCache.accuracy || 0; }
+
+function renderMasteryCard(lp, lvl){
+  if(!lp) return "";
+  const stageOrder = ["mcq","e2k","k2e"];
+  const stageIdx = lp.stage==="done" ? 3 : stageOrder.indexOf(lp.stage);
+  const stepHtml = (field, label) => {
+    const idx = stageOrder.indexOf(field);
+    const cls = idx < stageIdx ? "done" : (idx===stageIdx ? "active" : "");
+    const icon = idx < stageIdx ? "✓ " : "";
+    return `<div class="stage-step ${cls}">${icon}${label}</div>`;
+  };
+  const stepsHtml = `
+    <div class="stage-tracker">
+      ${stepHtml("mcq","객관식")}
+      <span class="stage-arrow">&rarr;</span>
+      ${stepHtml("e2k","영→한")}
+      <span class="stage-arrow">&rarr;</span>
+      ${stepHtml("k2e","한→영")}
+    </div>
+  `;
+  let bodyHtml;
+  if(lp.stage==="done"){
+    bodyHtml = `<div class="mastery-progress-text" style="color:var(--correct);font-weight:700;">🎉 이 단계는 3단계 모두 마스터했어요! 곧 다음 단계로 넘어가요.</div>`;
+  } else {
+    const doneCount = lp.stage==="mcq" ? lp.mcqCount : lp.stage==="e2k" ? lp.e2kCount : lp.k2eCount;
+    const target = lp.stage==="mcq" ? lp.mcqTarget : lp.stage==="e2k" ? lp.e2kTarget : lp.k2eTarget;
+    const pct = lp.totalWordsInLevel ? Math.round(doneCount/lp.totalWordsInLevel*100) : 0;
+    bodyHtml = `
+      <div class="mastery-progress-text">${stageFieldLabel(lp.stage)} 단계 · 연속 ${target}회 정답 목표 · <b style="color:var(--ink);">${doneCount}/${lp.totalWordsInLevel}</b> 단어 달성</div>
+      <div class="stage-bar"><div class="stage-bar-fill" style="width:${pct}%;"></div></div>
+    `;
+  }
+  return `
+    <div class="mastery-card">
+      <div class="mastery-head">
+        <span class="mastery-title">🏅 단계 마스터리</span>
+        <span class="mastery-level">${escHtml(lvl)}</span>
+      </div>
+      ${stepsHtml}
+      ${bodyHtml}
+    </div>
+  `;
+}
+
+function renderHome(){
+  const nbCount = notebookCache.length;
+  const lvl = profile.defaultLevel || "초등기본";
+  const lp = (levelProgressCache && levelProgressCache.level===lvl) ? levelProgressCache : null;
+  appEl.innerHTML = `
+    <div class="nav-row">
+      <p class="eyebrow" style="margin:0;">${escHtml(profile.name)}님 · ${lvl}</p>
+      <span>
+        <button class="link-btn" onclick="toggleSound()" title="효과음 켜기/끄기">${state.soundEnabled ? '🔊' : '🔇'}</button>
+        <button class="link-btn" onclick="goProfileSettings()">⚙️ 프로필 설정</button>
+        <button class="link-btn" onclick="switchProfile()">프로필 변경</button>
+      </span>
+    </div>
+    <h1>단어 마스터 노트</h1>
+    <p class="subtitle">전체 단어 ${WORDS.length}개 중 기본 난이도(${lvl})로 학습해요. 오답은 오답노트에 쌓여 다 익힐 때까지 반복 출제돼요. (난이도 조정은 관리자만 할 수 있어요)</p>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-icon">🎯</div>
+        <div class="stat-card-num">${accuracyPct()}%</div>
+        <div class="stat-card-label">전체 정답률</div>
+      </div>
+      <div class="stat-card c-mustard">
+        <div class="stat-card-icon">📝</div>
+        <div class="stat-card-num">${statsCache.totalAnswered}</div>
+        <div class="stat-card-label">누적 문제</div>
+      </div>
+      <div class="stat-card c-correct">
+        <div class="stat-card-icon">✅</div>
+        <div class="stat-card-num">${statsCache.totalRounds}</div>
+        <div class="stat-card-label">완료 회차</div>
+      </div>
+    </div>
+
+    ${renderMasteryCard(lp, lvl)}
+
+    <button class="card-btn primary" onclick="goSetup()">
+      <div class="ctitle">📘 새 단어 학습 시작</div>
+      <div class="cdesc">객관식·주관식(영→한/한→영)·섞어서 중 골라서 시작해요</div>
+    </button>
+
+    <button class="card-btn" ${nbCount===0?'disabled':''} onclick="goNotebookScreen()">
+      <div class="ctitle">🔴 오답노트 ${nbCount>0?`<span class="badge">${nbCount}개</span>`:`<span class="badge zero">0개</span>`}</div>
+      <div class="cdesc">${nbCount>0 ? '틀렸던 단어 목록을 보고, 두 번 연속 맞힐 때까지 복습해요.' : '아직 틀린 단어가 없어요. 학습을 시작해보세요!'}</div>
+    </button>
+
+    <button class="card-btn" onclick="goHistory()">
+      <div class="ctitle">📅 학습 기록</div>
+      <div class="cdesc">날짜별 점수와 그날 틀린 단어를 확인해요</div>
+    </button>
+
+    <button class="card-btn gold" onclick="goLeaderboard()">
+      <div class="ctitle">🏆 순위 보기</div>
+      <div class="cdesc">난이도 → 누적 정답 → 마스터 단어 순으로 다 같이 순위를 확인해요</div>
+    </button>
+
+    <div style="text-align:right;margin-top:6px;">
+      <button class="link-btn" onclick="goSettings()">⚙️ 설정 (AI 모델 등)</button>
+    </div>
+  `;
+}
+
+function goSettings(){
+  if(!isAdminAuthed){
+    state.screen = "admin-auth";
+    state.adminAuthError = null;
+    render();
+    return;
+  }
+  loadSettingsData();
+}
+function loadSettingsData(){
+  state.screen = "settings";
+  state.overrideLevel = state.overrideLevel || LEVELS[0];
+  appEl.innerHTML = `<div class="loading">설정을 불러오는 중...</div>`;
+  Promise.all([
+    gsRun('getAdminSettings'),
+    gsRun('getStageTargets'),
+    gsRun('getAllRoundsAdmin', 300),
+    gsRun('getStageTargetOverride', state.overrideLevel)
+  ]).then(([s, targetsRaw, roundsRaw, overrideRaw])=>{
+    state.settings = s;
+    try{ state.stageTargets = targetsRaw ? JSON.parse(targetsRaw) : {mcq:8,e2k:3,k2e:3}; }
+    catch(e){ state.stageTargets = {mcq:8,e2k:3,k2e:3}; }
+    try{ state.adminHistory = roundsRaw ? JSON.parse(roundsRaw) : []; }
+    catch(e){ state.adminHistory = []; }
+    try{ state.overrideData = overrideRaw ? JSON.parse(overrideRaw) : null; }
+    catch(e){ state.overrideData = null; }
+    render();
+  }).catch(e=>{
+    state.settings = null;
+    state.settingsError = errText(e);
+    render();
+  });
+}
+async function saveGeminiModel(){
+  const sel = document.getElementById('geminiModelSelect');
+  const val = (sel.value||"").trim();
+  if(!val) return;
+  const btn = document.getElementById('saveModelBtn');
+  if(btn) btn.disabled = true;
+  try{
+    const s = await gsRun('setGeminiModel', val);
+    state.settings = s;
+    state.settingsSaved = true;
+    render();
+  }catch(e){
+    alert('저장에 실패했어요: ' + errText(e));
+    if(btn) btn.disabled = false;
+  }
+}
+async function submitStageTargets(){
+  const mcq = document.getElementById('targetMcqInput').value;
+  const e2k = document.getElementById('targetE2kInput').value;
+  const k2e = document.getElementById('targetK2eInput').value;
+  try{
+    const raw = await gsRun('setStageTargets', mcq, e2k, k2e);
+    state.stageTargets = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    state.stageTargetError = null;
+    state.stageTargetSaved = true;
+    render();
+  }catch(e){
+    state.stageTargetError = errText(e);
+    state.stageTargetSaved = false;
+    render();
+  }
+}
+async function submitAdminPasswordChange(){
+  const p1 = document.getElementById('adminNewPwInput').value;
+  const p2 = document.getElementById('adminNewPwConfirmInput').value;
+  if(!p1 || !p2){ state.adminPwError = "비밀번호를 입력해주세요."; state.adminPwSaved=false; render(); return; }
+  if(p1 !== p2){ state.adminPwError = "비밀번호가 서로 달라요."; state.adminPwSaved=false; render(); return; }
+  blurActive();
+  try{
+    await gsRun('setAdminPassword', p1);
+    state.adminPwError = null;
+    state.adminPwSaved = true;
+    render();
+  }catch(e){
+    state.adminPwError = "변경 실패: " + errText(e);
+    state.adminPwSaved = false;
+    render();
+  }
+}
+function goAdminPerson(id){
+  state.screen = "admin-person";
+  state.adminSelectedUserId = id;
+  state.adminMonthIndex = 0;
+  render();
+}
+function adminBackToList(){
+  state.screen = "settings";
+  render();
+}
+function adminPrevMonth(){ state.adminMonthIndex = (state.adminMonthIndex||0) + 1; render(); }
+function adminNextMonth(){ state.adminMonthIndex = Math.max(0, (state.adminMonthIndex||0) - 1); render(); }
+
+function renderSettings(){
+  if(!state.settings){
+    appEl.innerHTML = `
+      <div class="nav-row"><button class="link-btn" onclick="goHome()">&larr; 홈으로</button></div>
+      <p class="empty-note">설정을 불러오지 못했어요.${state.settingsError ? `<br><span style="font-family:monospace;font-size:11px;">${escHtml(state.settingsError)}</span>` : ''}</p>
+    `;
+    return;
+  }
+  const s = state.settings;
+  const MODEL_OPTIONS = [
+    { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash Lite" },
+    { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash Lite" },
+    { id: "gemini-3.6-flash", label: "Gemini 3.6 Flash" },
+    { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" }
+  ];
+  const currentModel = s.geminiModel || "gemini-3.1-flash-lite";
+  const isKnown = MODEL_OPTIONS.some(m => m.id === currentModel);
+  const rows = state.adminHistory || [];
+  const counts = {};
+  rows.forEach(r=>{ counts[r.userId] = (counts[r.userId]||0) + 1; });
+  const initials = n => n.trim().charAt(0).toUpperCase();
+
+  appEl.innerHTML = `
+    <div class="nav-row"><button class="link-btn" onclick="goHome()">&larr; 홈으로</button></div>
+    <h1 style="font-size:22px;">설정 (관리자)</h1>
+    <p class="subtitle">필요한 항목만 바꾸고 그 항목의 저장 버튼만 누르면 돼요. 다른 항목은 그대로 유지돼요.</p>
+
+    <div class="settings-card">
+      <div class="settings-card-title"><span class="sc-icon">🤖</span> AI 모델</div>
+      <select id="geminiModelSelect" class="text-input" style="font-size:15px;">
+        ${MODEL_OPTIONS.map(m=>`<option value="${m.id}" ${currentModel===m.id?'selected':''}>${m.label}</option>`).join('')}
+        ${!isKnown ? `<option value="${escHtml(currentModel)}" selected>${escHtml(currentModel)} (현재 값)</option>` : ''}
+      </select>
+      <button id="saveModelBtn" class="btn block" onclick="saveGeminiModel()">저장</button>
+      ${state.settingsSaved ? `<p style="color:var(--correct);font-size:12.5px;margin-top:10px;">✅ 저장됐어요. 다음 AI 채점부터 바로 적용돼요.</p>` : ''}
+
+      <div class="card-subhead">API 키 상태</div>
+      <div class="stat-chip" style="display:inline-block;">${s.hasApiKey ? '✅ GEMINI_API_KEY 등록됨' : '⚠️ GEMINI_API_KEY 미등록 (Apps Script 스크립트 속성에서 등록 필요)'}</div>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-title"><span class="sc-icon">🎯</span> 단계 마스터 목표</div>
+      <div class="card-subhead">공통 기본값</div>
+      <p style="font-size:12px;color:var(--ink-soft);margin:0 0 10px;">각 단계에서 연속 몇 번 맞히면 통과할지 정해요. 지금 학습 중인 단어에도 바로 적용돼요.</p>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:4px;font-weight:700;">객관식</div>
+          <input id="targetMcqInput" class="text-input" type="number" min="1" style="margin-bottom:0;" value="${state.stageTargets?.mcq ?? 8}">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:4px;font-weight:700;">주관식 영→한</div>
+          <input id="targetE2kInput" class="text-input" type="number" min="1" style="margin-bottom:0;" value="${state.stageTargets?.e2k ?? 3}">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:4px;font-weight:700;">주관식 한→영</div>
+          <input id="targetK2eInput" class="text-input" type="number" min="1" style="margin-bottom:0;" value="${state.stageTargets?.k2e ?? 3}">
+        </div>
+      </div>
+      ${state.stageTargetError ? `<p style="color:var(--wrong);font-size:12.5px;margin:4px 0 0;">${escHtml(state.stageTargetError)}</p>` : ''}
+      ${state.stageTargetSaved ? `<p style="color:var(--correct);font-size:12.5px;margin:4px 0 0;">✅ 저장됐어요.</p>` : ''}
+      <button class="btn secondary block" style="margin-top:10px;" onclick="submitStageTargets()">목표 횟수 저장 (공통 기본값)</button>
+
+      <div class="card-subhead">등급별 예외 설정</div>
+      <p style="font-size:12px;color:var(--ink-soft);margin:0 0 10px;">특정 등급만 목표 횟수를 다르게 하고 싶을 때만 써요. 설정 안 하면 위 공통값을 그대로 따라가요.</p>
+      <select id="overrideLevelSelect" class="text-input" onchange="loadLevelOverride()">
+        ${LEVELS.map(lv=>`<option value="${lv}" ${state.overrideLevel===lv?'selected':''}>${lv}</option>`).join('')}
+      </select>
+      <div style="display:flex;gap:8px;margin-bottom:6px;">
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:4px;font-weight:700;">객관식</div>
+          <input id="overrideMcqInput" class="text-input" type="number" min="1" style="margin-bottom:0;" value="${state.overrideData?.mcq ?? state.stageTargets?.mcq ?? 8}">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:4px;font-weight:700;">주관식 영→한</div>
+          <input id="overrideE2kInput" class="text-input" type="number" min="1" style="margin-bottom:0;" value="${state.overrideData?.e2k ?? state.stageTargets?.e2k ?? 3}">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:4px;font-weight:700;">주관식 한→영</div>
+          <input id="overrideK2eInput" class="text-input" type="number" min="1" style="margin-bottom:0;" value="${state.overrideData?.k2e ?? state.stageTargets?.k2e ?? 3}">
+        </div>
+      </div>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin:0 0 8px;">${state.overrideData?.hasOverride ? `✅ 이 등급은 지금 예외값을 쓰고 있어요.` : `현재 공통값을 그대로 쓰고 있어요.`}</p>
+      ${state.overrideError ? `<p style="color:var(--wrong);font-size:12.5px;margin:4px 0 0;">${escHtml(state.overrideError)}</p>` : ''}
+      ${state.overrideSaved ? `<p style="color:var(--correct);font-size:12.5px;margin:4px 0 0;">✅ ${escHtml(state.overrideSaved)}</p>` : ''}
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn secondary" style="flex:1;" onclick="submitLevelOverride()">이 등급에 적용</button>
+        <button class="btn secondary" style="flex:1;" onclick="clearLevelOverride()">이 등급 예외 삭제</button>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-title"><span class="sc-icon">👥</span> 사람별 관리</div>
+      <p style="font-size:12px;color:var(--ink-soft);margin:0 0 12px;">학생은 스스로 등급을 올릴 수 없어요. 여기서 등급을 바꾸고, 비밀번호를 초기화하고, 각자의 기록도 볼 수 있어요.</p>
+      ${PROFILES.length===0 ? `<p class="empty-note">등록된 프로필이 없어요.</p>` :
+        PROFILES.map(p=>`
+          <div class="person-row">
+            <div class="person-row-top">
+              <span class="avatar">${initials(p.name)}</span>
+              <span class="p-name">${escHtml(p.name)}</span>
+              <select id="levelSelect_${p.id}" class="text-input">
+                ${LEVELS.map(lv=>`<option value="${lv}" ${p.defaultLevel===lv?'selected':''}>${lv}</option>`).join('')}
+              </select>
+              <button class="btn secondary" style="padding:9px 12px;white-space:nowrap;" onclick="applyProfileLevel('${p.id}')">적용</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <button class="person-row-link" style="text-align:left;margin-top:0;" onclick="resetProfilePw('${escStr(p.id)}', '${escStr(p.name)}')">🔄 비밀번호 초기화(0000)</button>
+              <button class="person-row-link" style="margin-top:0;" onclick="goAdminPerson('${escStr(p.id)}')">기록 ${counts[p.id]||0}회 보기 &rarr;</button>
+            </div>
+          </div>
+        `).join('')
+      }
+      ${state.profileLevelMsg ? `<p style="color:var(--correct);font-size:12px;margin:4px 0 0;">${escHtml(state.profileLevelMsg)}</p>` : ''}
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-title"><span class="sc-icon">🔐</span> 관리자 비밀번호</div>
+      <input id="adminNewPwInput" class="text-input" type="password" placeholder="새 관리자 비밀번호">
+      <input id="adminNewPwConfirmInput" class="text-input" type="password" placeholder="새 비밀번호 확인" onkeydown="if(event.key==='Enter') submitAdminPasswordChange()">
+      ${state.adminPwError ? `<p style="color:var(--wrong);font-size:12.5px;margin:4px 0 0;">${escHtml(state.adminPwError)}</p>` : ''}
+      ${state.adminPwSaved ? `<p style="color:var(--correct);font-size:12.5px;margin:4px 0 0;">✅ 변경됐어요.</p>` : ''}
+      <button class="btn secondary block" style="margin-top:10px;" onclick="submitAdminPasswordChange()">저장</button>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-title"><span class="sc-icon">🔍</span> 학습 기록 진단</div>
+      <p style="font-size:12px;color:var(--ink-soft);margin:0 0 10px;">통계는 나오는데 학습 기록만 안 보일 때, 시트에 실제로 저장된 값과 지금 프로필 id가 일치하는지 확인해요.</p>
+      <button class="btn secondary block" onclick="runDiagnosis()">진단 실행</button>
+      <div id="diagResult"></div>
+    </div>
+
+    <p style="font-size:11.5px;color:var(--ink-soft);margin-top:20px;line-height:1.6;">
+      목록에 없는 AI 모델을 쓰고 싶으면 알려주시면 목록에 추가해드릴게요.
+    </p>
+  `;
+}
+async function loadLevelOverride(){
+  const sel = document.getElementById('overrideLevelSelect');
+  const level = sel.value;
+  state.overrideLevel = level;
+  state.overrideSaved = null;
+  state.overrideError = null;
+  try{
+    const raw = await gsRun('getStageTargetOverride', level);
+    state.overrideData = raw ? JSON.parse(raw) : null;
+  }catch(e){
+    state.overrideData = null;
+    state.overrideError = errText(e);
+  }
+  render();
+}
+async function submitLevelOverride(){
+  const level = state.overrideLevel || LEVELS[0];
+  const mcq = document.getElementById('overrideMcqInput').value;
+  const e2k = document.getElementById('overrideE2kInput').value;
+  const k2e = document.getElementById('overrideK2eInput').value;
+  try{
+    const raw = await gsRun('setStageTargetOverride', level, mcq, e2k, k2e);
+    state.overrideData = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    state.overrideError = null;
+    state.overrideSaved = `${level} 등급에 저장됐어요.`;
+    render();
+  }catch(e){
+    state.overrideError = errText(e);
+    state.overrideSaved = null;
+    render();
+  }
+}
+async function clearLevelOverride(){
+  const level = state.overrideLevel || LEVELS[0];
+  try{
+    const raw = await gsRun('clearStageTargetOverride', level);
+    state.overrideData = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    state.overrideError = null;
+    state.overrideSaved = `${level} 등급 예외를 지웠어요. 이제 공통값을 써요.`;
+    render();
+  }catch(e){
+    state.overrideError = errText(e);
+    state.overrideSaved = null;
+    render();
+  }
+}
+async function applyProfileLevel(id){
+  const sel = document.getElementById('levelSelect_'+id);
+  const level = sel.value;
+  try{
+    const p = await gsRun('updateProfileDefaultLevel', id, level);
+    const idx = PROFILES.findIndex(x=>x.id===id);
+    if(idx>=0) PROFILES[idx] = Object.assign({}, PROFILES[idx], p);
+    if(profile && profile.id===id){
+      profile.defaultLevel = p.defaultLevel;
+      const lpRaw = await gsRun('getLevelProgress', id, level);
+      levelProgressCache = lpRaw ? JSON.parse(lpRaw) : null;
+    }
+    state.profileLevelMsg = `${p.name}님의 난이도를 ${p.defaultLevel}(으)로 바꿨어요.`;
+    render();
+  }catch(e){
+    alert('난이도 변경에 실패했어요: ' + errText(e));
+  }
+}
+async function resetProfilePw(id, name){
+  if(!confirm(`${name}님의 비밀번호를 0000으로 초기화할까요?`)) return;
+  try{
+    const res = await gsRun('resetProfilePassword', id);
+    state.profileLevelMsg = `${res.name}님의 비밀번호를 0000으로 초기화했어요.`;
+    render();
+  }catch(e){
+    alert('초기화에 실패했어요: ' + errText(e));
+  }
+}
+async function runDiagnosis(){
+  const box = document.getElementById('diagResult');
+  box.innerHTML = `<p style="font-size:12px;color:var(--ink-soft);margin-top:10px;">진단 중...</p>`;
+  try{
+    const d = await gsRun('debugRoundsData', profile.id);
+    const matchNote = d.roundsMatchedForThisProfile > 0
+      ? `✅ 이 프로필로 저장된 회차 ${d.roundsMatchedForThisProfile}건을 찾았어요.`
+      : `⚠️ 이 프로필 id로 저장된 회차를 못 찾았어요. Rounds 시트에 있는 다른 id들과 비교해보세요.`;
+    box.innerHTML = `
+      <div class="flashcard" style="margin-top:10px;padding:16px 16px 16px 40px;font-size:12px;font-family:'SFMono-Regular',Consolas,Menlo,monospace;line-height:1.7;word-break:break-all;">
+        <div>${matchNote}</div>
+        <div style="margin-top:8px;">현재 프로필 id: ${escHtml(d.currentProfileId)}</div>
+        <div>Rounds 전체 행 수: ${d.roundsTotalRows}</div>
+        <div>Rounds 헤더: ${escHtml(JSON.stringify(d.roundsHeader))}</div>
+        <div>Rounds에 실제 저장된 id 샘플: ${escHtml(JSON.stringify(d.roundsSampleUserIds))}</div>
+        <div style="margin-top:8px;">등록된 프로필 목록:</div>
+        ${d.allProfiles.map(p=>`<div>- ${escHtml(p.name)} : ${escHtml(p.id)}</div>`).join('')}
+      </div>
+    `;
+  }catch(e){
+    box.innerHTML = `<div class="feedback-box wrong" style="margin-top:10px;">진단 실패: ${escHtml(errText(e))}</div>`;
+  }
+}
+
+async function goSetup(source){
+  state.screen="setup";
+  state.setupSource = source || "new";
+  state.selRanges = new Set();
+  state.selLevels = new Set([profile.defaultLevel || "초등기본"]);
+  state.selCount = 20;
+  state.selQuestionType = state.selQuestionType || "mcq";
+  state.selSpellDirection = state.selSpellDirection || "k2e";
+  state.selMcqOptionCount = state.selMcqOptionCount || 8;
+  state.setupStageStatus = null;
+  render();
+  if(state.setupSource !== "notebook" && state.selLevels.size===1){
+    const lvl = Array.from(state.selLevels)[0];
+    const status = await fetchStageStatus(lvl);
+    applyStageLock(status);
+    render();
+  }
+}
+function getAllowedLevels(){
+  const idx = LEVELS.indexOf(profile.defaultLevel || LEVELS[0]);
+  return LEVELS.filter((lv,i)=> i <= (idx===-1?0:idx));
+}
+async function fetchStageStatus(level){
+  try{
+    const raw = await gsRun('getLevelProgress', profile.id, level);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function applyStageLock(status){
+  state.setupStageStatus = status;
+  if(!status || status.stage==='done') return;
+  if(status.stage==='mcq'){
+    state.selQuestionType = 'mcq';
+  } else if(status.stage==='e2k'){
+    state.selQuestionType = 'spell';
+    state.selSpellDirection = 'e2k';
+  } else if(status.stage==='k2e'){
+    state.selQuestionType = 'spell';
+    state.selSpellDirection = 'k2e';
+  }
+}
+function stageFieldLabel(field){ return field==='mcq' ? '객관식' : field==='e2k' ? '주관식(영→한)' : '주관식(한→영)'; }
+
+function renderSetup(){
+  const isNotebook = state.setupSource === "notebook";
+  const singleLevel = (!isNotebook && state.selLevels.size===1) ? Array.from(state.selLevels)[0] : null;
+  const status = state.setupStageStatus;
+  const locked = !isNotebook && singleLevel && status && status.level===singleLevel && status.stage!=='done';
+
+  const questionTypeButtons = `
+    <button class="mode-btn ${state.selQuestionType==='mcq'?'active':''}" ${locked && state.selQuestionType!=='mcq' ? 'disabled' : ''} onclick="setQuestionType('mcq')">
+      <div><div class="mtitle">객관식</div><div class="mdesc">단어를 보고 뜻 고르기</div></div>
+    </button>
+    <button class="mode-btn ${state.selQuestionType==='spell'?'active':''}" ${locked && state.selQuestionType!=='spell' ? 'disabled' : ''} onclick="setQuestionType('spell')">
+      <div><div class="mtitle">주관식</div><div class="mdesc">직접 입력해서 답하기</div></div>
+    </button>
+    <button class="mode-btn ${state.selQuestionType==='mixed'?'active':''}" ${locked ? 'disabled' : ''} onclick="setQuestionType('mixed')">
+      <div><div class="mtitle">객관식 + 주관식 섞어서</div><div class="mdesc">문제마다 무작위로 유형이 바뀌어요</div></div>
+    </button>
+  `;
+  const needsSpellDir = state.selQuestionType==='spell' || state.selQuestionType==='mixed';
+  const spellDirButtons = `
+    <button class="chip ${state.selSpellDirection==='k2e'?'active':''}" ${locked && state.selSpellDirection!=='k2e' ? 'disabled' : ''} onclick="setSpellDirection('k2e')">한글 → 영어</button>
+    <button class="chip ${state.selSpellDirection==='e2k'?'active':''}" ${locked && state.selSpellDirection!=='e2k' ? 'disabled' : ''} onclick="setSpellDirection('e2k')">영어 → 한글</button>
+    <button class="chip ${state.selSpellDirection==='mixed'?'active':''}" ${locked ? 'disabled' : ''} onclick="setSpellDirection('mixed')">섞어서</button>
+  `;
+  const needsMcqCount = state.selQuestionType==='mcq' || state.selQuestionType==='mixed';
+  const mcqCounts = [4,6,8,10];
+  const mcqCountButtons = mcqCounts.map(n=>`
+    <button class="count-btn ${state.selMcqOptionCount===n?'active':''}" onclick="setMcqOptionCount(${n})">${n}지선다</button>
+  `).join('');
+
+  let stageBanner = "";
+  if(!isNotebook && singleLevel && status && status.level===singleLevel){
+    if(status.stage==='done'){
+      stageBanner = `<div class="feedback-box correct" style="margin-bottom:16px;">🎉 <b>${escHtml(singleLevel)}</b> 단계는 이미 3단계(객관식·영→한·한→영)를 모두 마스터했어요. 자유롭게 복습할 수 있어요.</div>`;
+    } else {
+      const fieldKey = status.stage;
+      const doneCount = fieldKey==='mcq' ? status.mcqCount : fieldKey==='e2k' ? status.e2kCount : status.k2eCount;
+      const target = fieldKey==='mcq' ? status.mcqTarget : fieldKey==='e2k' ? status.e2kTarget : status.k2eTarget;
+      stageBanner = `
+        <div class="flashcard" style="padding:16px 18px 16px 44px;margin-bottom:16px;">
+          <div style="font-weight:800;font-size:14.5px;margin-bottom:6px;">🔒 현재 단계: ${stageFieldLabel(fieldKey)} (연속 ${target}회 정답 목표)</div>
+          <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;">${doneCount}/${status.totalWordsInLevel} 단어 달성 — 이 단계를 전부 채우면 다음 유형이 열려요.</div>
+          <div class="stage-bar"><div class="stage-bar-fill" style="width:${status.totalWordsInLevel? Math.round(doneCount/status.totalWordsInLevel*100):0}%;"></div></div>
+        </div>
+      `;
+    }
+  }
+
+  let rangeSection = "", countSection = "", levelSection = "", pool;
+  if(isNotebook){
+    pool = notebookCache.map(e=>findWord(e.word)).filter(Boolean);
+  } else {
+    const allowedLevels = getAllowedLevels();
+    const levelButtons = LEVELS.map(lv=>{
+      const ok = allowedLevels.includes(lv);
+      return `<button class="chip ${state.selLevels.has(lv)?'active':''}" ${ok?'':'disabled'} onclick="toggleLevel('${lv}')">${lv}</button>`;
+    }).join('');
+    levelSection = `
+      <div class="section-title">난이도 (여러 개 선택 가능, 미선택 시 전체)</div>
+      <div class="chip-row">${levelButtons}</div>
+      <p style="font-size:11px;color:var(--ink-soft);margin:-2px 0 4px;">자기 현재 등급(${escHtml(profile.defaultLevel||'초등기본')})보다 높은 난이도는 회색으로 표시돼요 — 관리자가 등급을 올려줘야 선택할 수 있어요. 단일 난이도를 고르면 객관식 → 주관식(영→한) → 주관식(한→영) 순서로 단계가 잠겨요.</p>
+    `;
+    const rangeButtons = RANGES.map(r=>`
+      <button class="chip ${state.selRanges.has(r.id)?'active':''}" onclick="toggleRange('${r.id}')">${r.label}</button>
+    `).join('');
+    pool = filteredPool();
+    const counts = [10,20,30,50];
+    rangeSection = `
+      <div class="section-title">범위 선택 (여러 개 선택 가능, 미선택 시 전체)</div>
+      <div class="chip-row">${rangeButtons}</div>
+    `;
+    countSection = `
+      <div class="section-title">문제 수 (현재 범위 내 단어 ${pool.length}개)</div>
+      <div class="count-row">
+        ${counts.map(n=>`<button class="count-btn ${state.selCount===n?'active':''}" onclick="setCount(${n})">${n}</button>`).join('')}
+        <button class="count-btn ${state.selCount==='all'?'active':''}" onclick="setCount('all')">전체</button>
+      </div>
+    `;
+  }
+
+  appEl.innerHTML = `
+    <div class="nav-row"><button class="link-btn" onclick="${isNotebook?'goNotebookScreen()':'goHome()'}">&larr; ${isNotebook?'오답노트로':'홈으로'}</button></div>
+    <h1 style="font-size:22px;">${isNotebook?'오답노트 복습 설정':'학습 설정'}</h1>
+    <p class="subtitle">${isNotebook?`오답노트에 있는 단어 ${pool.length}개로 복습해요.` : '문제 유형, 난이도, 범위, 문제 수를 고르고 시작하세요.'}</p>
+
+    ${stageBanner}
+
+    <div class="section-title">문제 유형</div>
+    ${questionTypeButtons}
+    ${needsSpellDir ? `<div class="section-title">주관식 방향</div><div class="chip-row">${spellDirButtons}</div>` : ''}
+    ${needsMcqCount ? `<div class="section-title">객관식 보기 개수</div><div class="count-row">${mcqCountButtons}</div>` : ''}
+    ${levelSection}
+    ${rangeSection}
+    ${countSection}
+
+    <div style="margin-top:24px;">
+      <button class="btn block" onclick="beginNewRound()">${isNotebook?'복습 시작하기':'학습 시작하기'}</button>
+    </div>
+  `;
+}
+function setQuestionType(t){ if(t===state.selQuestionType) return; state.selQuestionType=t; render(); }
+function setSpellDirection(d){ if(d===state.selSpellDirection) return; state.selSpellDirection=d; render(); }
+function setMcqOptionCount(n){ state.selMcqOptionCount=n; render(); }
+function toggleRange(id){ if(state.selRanges.has(id)) state.selRanges.delete(id); else state.selRanges.add(id); render(); }
+async function toggleLevel(lv){
+  if(!getAllowedLevels().includes(lv)) return; // 자기 등급보다 높은 난이도는 선택 불가
+  if(state.selLevels.has(lv)) state.selLevels.delete(lv); else state.selLevels.add(lv);
+  if(state.setupSource!=="notebook" && state.selLevels.size===1){
+    const status = await fetchStageStatus(Array.from(state.selLevels)[0]);
+    applyStageLock(status);
+  } else {
+    state.setupStageStatus = null;
+  }
+  render();
+}
+function setCount(n){ state.selCount=n; render(); }
+function filteredPool(){
+  let pool = WORDS;
+  const allowed = getAllowedLevels();
+  if(state.selLevels && state.selLevels.size>0){
+    pool = pool.filter(w=>state.selLevels.has(w.level));
+  } else {
+    // 미선택("전체")이어도 자기 등급 이하까지만 허용
+    pool = pool.filter(w=>allowed.includes(w.level));
+  }
+  if(state.selRanges.size>0){
+    const active = RANGES.filter(r=>state.selRanges.has(r.id));
+    pool = pool.filter(w=>{ const c=firstLetter(w.w); return active.some(r=>r.test(c)); });
+  }
+  return pool;
+}
+async function beginNewRound(){
+  const isNotebook = state.setupSource === "notebook";
+  const pool = isNotebook ? notebookCache.map(e=>findWord(e.word)).filter(Boolean) : filteredPool();
+  const needsMcq = state.selQuestionType==='mcq' || state.selQuestionType==='mixed';
+  if(needsMcq && pool.length < 2){ alert('객관식을 풀려면 최소 2개 이상의 단어가 필요해요.'); return; }
+  if(pool.length===0) return;
+  const n = isNotebook ? pool.length : (state.selCount==='all' ? pool.length : Math.min(state.selCount, pool.length));
+
+  const singleLevel = (!isNotebook && state.selLevels && state.selLevels.size===1) ? Array.from(state.selLevels)[0] : null;
+  const status = state.setupStageStatus;
+  const locked = singleLevel && status && status.level===singleLevel && status.stage!=='done';
+
+  let list;
+  if(locked){
+    let progressMap = {};
+    try{
+      const raw = await gsRun('getProgressMap', profile.id, singleLevel);
+      progressMap = raw ? JSON.parse(raw) : {};
+    }catch(e){ progressMap = {}; }
+    const field = status.stage; // 'mcq' | 'e2k' | 'k2e'
+    list = weightedSample(pool, n, w => progressWeight((progressMap[w.w]||{})[field] || 0));
+  } else {
+    // 여러 난이도 섞기 / 전체 / 이미 마스터한 단일 난이도 자유 복습 -> 순수 랜덤
+    list = shuffle(pool).slice(0,n);
+  }
+
+  startRound(list, {
+    questionType: state.selQuestionType,
+    spellDirection: state.selSpellDirection,
+    mcqOptionCount: state.selMcqOptionCount,
+    levels: isNotebook ? [] : Array.from(state.selLevels || []),
+    isReview: isNotebook
+  });
+}
+function goHome(){ state.screen="home"; render(); }
+
+/** 퀴즈 중간에 "그만하기"를 누르면, 지금까지 푼 문제가 있으면 그만큼만 저장하고 결과 화면을 보여줘요.
+ *  하나도 안 풀고 나가면 그냥 홈으로 돌아가요. */
+function quitQuiz(){
+  if(state.results && state.results.length > 0){
+    // 아직 안 푼 나머지 단어는 버리고, 지금까지의 결과만 회차로 저장
+    state.roundTotal = new Set(state.results.map(r=>r.w)).size;
+    state.queue = [];
+    finishRound();
+  } else {
+    goHome();
+  }
+}
+
+/** 객관식 보기 개수에 따라 버튼 크기를 조절해요 (보기가 적을수록 크게, 많을수록 화면에 맞게 작게). */
+function mcqBtnStyle(n){
+  if(n<=4) return 'padding:23px 20px;font-size:19px;font-weight:700;margin-bottom:12px;';
+  if(n<=6) return 'padding:16px 16px;font-size:16px;margin-bottom:10px;';
+  if(n<=8) return 'padding:12px 14px;font-size:14px;margin-bottom:8px;';
+  return 'padding:9px 12px;font-size:12.5px;margin-bottom:7px;';
+}
+function renderQuiz(){
+  const item = state.current;
+  const remaining = state.queue.length + 1;
+  let body = "";
+  if(state.currentType==="mcq"){
+    const n = state.options.length;
+    const sizeStyle = mcqBtnStyle(n);
+    body = `
+      <div class="q-word">${item.w}</div>
+      <div class="q-instr">알맞은 뜻을 고르세요 (${n}지선다)</div>
+      ${state.options.map(opt=>{
+        let cls="opt-btn";
+        if(state.answered){
+          if(opt===item.k) cls+=" correct";
+          else if(state.pickedWrong===opt) cls+=" wrong";
+        }
+        return `<button class="${cls}" style="${sizeStyle}" ${state.answered?'disabled':''} onclick="pickOption('${escStr(opt)}')">${opt}</button>`;
+      }).join('')}
+      ${(()=>{
+        let cls="opt-btn opt-dontknow";
+        if(state.answered && state.pickedWrong==="모름") cls+=" wrong";
+        return `<button class="${cls}" style="${sizeStyle}" ${state.answered?'disabled':''} onclick="pickDontKnowOption()">모름</button>`;
+      })()}
+    `;
+  } else if(state.currentDirection==="e2k"){
+    body = `
+      <div class="q-word">${item.w}</div>
+      <div class="q-instr">이 단어의 뜻을 한글로 입력하세요</div>
+      <input id="spellInput" class="spell-input ${state.answered ? (state.wasCorrect?'correct':'wrong') : ''}"
+        type="text" autocomplete="off" spellcheck="false" placeholder="한글로 입력..." ${(state.answered||state.aiChecking)?'disabled':''}
+        onkeydown="if(event.key==='Enter') submitSpelling()" />
+      ${state.aiRetryMsg ? `<div class="feedback-box wrong" style="margin-bottom:10px;">🤖 ${escHtml(state.aiRetryMsg)}${state.aiErrorDetail ? `<div style="margin-top:6px;font-weight:400;font-size:11.5px;font-family:'SFMono-Regular',Consolas,Menlo,monospace;opacity:.85;word-break:break-all;">오류 내용: ${escHtml(state.aiErrorDetail)}</div>` : ''}</div>` : ''}
+      ${state.aiChecking ? `<button class="btn" disabled>🤖 AI가 답을 확인하고 있어요...</button>` :
+        (!state.answered ? `<button class="btn" onclick="submitSpelling()">확인</button> <button class="btn secondary" onclick="skipAnswer()">모르겠어요</button>` : '')}
+    `;
+  } else {
+    body = `
+      <div class="q-meaning">${item.k}</div>
+      <div class="q-instr">영어 단어의 철자를 입력하세요</div>
+      <input id="spellInput" class="spell-input ${state.answered ? (state.wasCorrect?'correct':'wrong') : ''}"
+        type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="영어로 입력..." ${state.answered?'disabled':''}
+        onkeydown="if(event.key==='Enter') submitSpelling()" />
+      ${!state.answered ? `<button class="btn" onclick="submitSpelling()">확인</button> <button class="btn secondary" onclick="skipAnswer()">모르겠어요</button>` : ''}
+    `;
+  }
+  let feedback = "";
+  if(state.answered && state.currentType!=="mcq"){
+    if(state.wasCorrect){
+      feedback = `<div class="feedback-box correct">✅ 정답이에요!</div>`;
+    } else {
+      const correctAnswer = state.currentDirection==='e2k' ? item.k : item.w;
+      feedback = `<div class="feedback-box wrong">❌ 오답 — 정답은 <span class="feedback-answer">${escHtml(correctAnswer)}</span> 이에요. 이 회차 마지막에 다시 나와요.
+        ${state.aiFailed ? `<div style="margin-top:8px;font-weight:400;font-size:12px;">🤖 AI 확인이 계속 실패해서 오답으로 처리했어요 (판정이 아니라 오류예요).${state.aiErrorDetail ? `<div style="margin-top:4px;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:11.5px;opacity:.85;word-break:break-all;">오류 내용: ${escHtml(state.aiErrorDetail)}</div>` : ''}</div>` : ''}
+      </div>`;
+    }
+  }
+  const mcqModal = (state.currentType==="mcq" && state.answered) ? `
+    <div class="modal-backdrop" onclick="if(event.target===this) nextQuestion()">
+      <div class="modal-box">
+        <div class="modal-icon">${state.wasCorrect ? '✅' : '❌'}</div>
+        <div class="modal-title" style="color:${state.wasCorrect?'var(--correct)':'var(--wrong)'};">${state.wasCorrect ? '정답이에요!' : '오답이에요'}</div>
+        ${!state.wasCorrect ? `<div class="modal-answer">정답: <b>${escHtml(item.k)}</b></div>` : ''}
+        <button class="btn block" style="margin-top:16px;" onclick="nextQuestion()">확인</button>
+      </div>
+    </div>
+  ` : "";
+  appEl.innerHTML = `
+    <div class="nav-row">
+      <button class="link-btn" onclick="quitQuiz()">&larr; 그만하기</button>
+      <span style="font-size:12.5px;color:var(--ink-soft);font-weight:600;">남은 문제 ${remaining}개</span>
+    </div>
+    <div class="flashcard">${body}${feedback}</div>
+    ${(state.answered && state.currentType!=="mcq") ? `<div class="footer-actions"><button class="btn block" onclick="nextQuestion()">다음 문제 &rarr;</button></div>` : ''}
+    ${mcqModal}
+  `;
+  if(state.currentType==="spell" && !state.answered){
+    const inp = document.getElementById('spellInput');
+    if(inp) inp.focus();
+  }
+}
+function pickOption(opt){
+  if(state.answered) return;
+  state.pickedWrong = opt;
+  submitAnswer(opt === state.current.k, state.current);
+}
+function pickDontKnowOption(){
+  if(state.answered) return;
+  state.pickedWrong = "모름";
+  submitAnswer(false, state.current);
+}
+function skipAnswer(){
+  if(state.answered || state.aiChecking) return;
+  submitAnswer(false, state.current);
+}
+async function submitSpelling(){
+  if(state.answered || state.aiChecking) return;
+  const inp = document.getElementById('spellInput');
+  const raw = inp.value||"";
+  blurActive(); // 정답 판정으로 화면이 바뀌기 전에 키보드부터 내림
+
+  // 빈칸으로 제출하면 AI 확인 없이 바로 오답 처리
+  if(!raw.trim()){
+    submitAnswer(false, state.current);
+    return;
+  }
+
+  if(state.currentDirection!=="e2k"){
+    const correct = raw.trim().toLowerCase().replace(/\s+/g,' ') === state.current.w.toLowerCase();
+    submitAnswer(correct, state.current);
+    return;
+  }
+
+  // 영어 -> 한글: 로컬 유사 판정 먼저
+  if(fuzzyCheckKorean(raw, state.current.k)){
+    submitAnswer(true, state.current);
+    return;
+  }
+
+  // 애매한 경우 AI로 한 번 더 확인
+  state.aiChecking = true;
+  state.aiRetryMsg = null;
+  state.aiErrorDetail = null;
+  render();
+  try{
+    const res = await gsRun('checkMeaningWithAI', state.current.w, state.current.k, raw);
+    state.aiChecking = false;
+    submitAnswer(!!res.correct, state.current);
+  }catch(e){
+    state.aiChecking = false;
+    state.aiAttempts = (state.aiAttempts || 0) + 1;
+    state.aiErrorDetail = errText(e);
+    if(state.aiAttempts >= 2){
+      // AI가 두 번 연속 실패하면 더 기다리게 하지 않고 오답으로 확정
+      state.aiFailed = true;
+      submitAnswer(false, state.current);
+    } else {
+      // 첫 실패는 네트워크 문제일 수 있으니 한 번 더 입력할 기회를 줌
+      state.aiRetryMsg = "AI 확인에 실패했어요. 다시 입력해 주세요.";
+      render();
+    }
+  }
+}
+function errText(e){
+  try{
+    if(e && typeof e === 'object'){
+      return e.message || e.name || JSON.stringify(e);
+    }
+    return String(e);
+  }catch(_){ return '알 수 없는 오류'; }
+}
+
+function renderResult(){
+  if(state.submitting){
+    appEl.innerHTML = `<div class="loading">결과를 저장하는 중...</div>`;
+    return;
+  }
+  const wrongWords = Array.from(state.roundWrongSet).map(findWord).filter(Boolean);
+  const correctFirstTry = state.results.filter(r=>r.correct && !r.requeued).length;
+  appEl.innerHTML = `
+    <div class="nav-row"><button class="link-btn" onclick="goHome()">&larr; 홈으로</button></div>
+    ${state.levelUpInfo ? `
+    <div class="flashcard" style="text-align:center;border-left-color:var(--mustard);margin-bottom:16px;">
+      <div style="font-size:15px;font-weight:800;color:#3a2c0d;">🎉 축하해요! 난이도가 자동으로 올라갔어요</div>
+      <div style="font-size:13px;color:var(--ink-soft);margin-top:4px;">${state.levelUpInfo.from} → <b style="color:var(--ink);">${state.levelUpInfo.newLevel}</b></div>
+    </div>` : ''}
+    <div class="flashcard result-summary">
+      <div class="result-num">${correctFirstTry} / ${state.roundTotal}</div>
+      <div class="result-sub">한 번에 맞힌 단어 수</div>
+      ${state.saveError ? `<div style="margin-top:10px;color:var(--wrong);font-size:12.5px;">⚠ 서버 저장에 실패했어요. 네트워크를 확인해주세요.</div>` : ''}
+      ${(state.masteredThisRound||[]).length>0 ? `<div style="margin-top:14px;color:var(--correct);font-weight:700;font-size:13.5px;">🎉 이번에 오답노트에서 졸업한 단어 ${state.masteredThisRound.length}개</div>` : ''}
+    </div>
+    ${wrongWords.length>0 ? `
+    <div class="section-title">이번 회차에서 틀린 단어 (오답노트에 저장됨)</div>
+    <div class="flashcard" style="padding:18px 18px 4px 44px;">
+      ${wrongWords.map(w=>`<div class="word-row"><div><div class="word-main">${w.w}</div><div class="word-mean">${w.k}</div></div></div>`).join('')}
+    </div>` : `<p class="empty-note">이번 회차는 전부 맞혔어요! 완벽해요 👏</p>`}
+    <div class="footer-actions" style="margin-top:20px;">
+      <button class="btn secondary" style="flex:1;" onclick="goHome()">홈으로</button>
+      <button class="btn" style="flex:1;" onclick="goSetup()">다시 학습하기</button>
+    </div>
+  `;
+}
+
+function renderNotebook(){
+  const entries = notebookCache;
+  appEl.innerHTML = `
+    <div class="nav-row"><button class="link-btn" onclick="goHome()">&larr; 홈으로</button></div>
+    <h1 style="font-size:22px;">오답노트</h1>
+    <p class="subtitle">틀린 단어가 쌓이는 곳이에요. 복습에서 2번 연속 맞히면 자동으로 사라져요.</p>
+    <div class="flashcard" style="padding:18px 18px 4px 44px;">
+      ${entries.length===0 ? `<p class="empty-note">오답노트가 비어있어요!</p>` :
+        entries.map(e=>`
+          <div class="word-row">
+            <div><div class="word-main">${e.word}</div><div class="word-mean">${e.k}</div></div>
+            <div class="word-count">${e.wrongCount}회 오답${e.correctStreak>0?`<br>${e.correctStreak}/2 연속정답`:''}</div>
+          </div>`).join('')
+      }
+    </div>
+    ${entries.length>0 ? `<button class="btn block" style="margin-top:18px;" onclick="goSetup('notebook')">복습 설정하고 시작하기</button>` : ''}
+  `;
+}
+function goNotebookScreen(){ state.screen="notebook"; render(); }
+
+function goLeaderboard(){
+  state.screen = "leaderboard";
+  appEl.innerHTML = `<div class="loading">순위를 불러오는 중...</div>`;
+  gsRun('getLeaderboard').then(raw=>{
+    try{ state.leaderboard = raw ? JSON.parse(raw) : []; state.leaderboardError = null; }
+    catch(e){ state.leaderboard = null; state.leaderboardError = "응답 파싱 실패: " + errText(e); }
+    render();
+  }).catch(e=>{
+    state.leaderboard = null;
+    state.leaderboardError = errText(e);
+    render();
+  });
+}
+function renderLeaderboard(){
+  if(state.leaderboardError){
+    appEl.innerHTML = `
+      <div class="nav-row"><button class="link-btn" onclick="goHome()">&larr; 홈으로</button></div>
+      <h1 style="font-size:22px;">순위 보기</h1>
+      <div class="feedback-box wrong">
+        순위를 불러오지 못했어요.
+        <div style="margin-top:6px;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:11.5px;opacity:.85;word-break:break-all;">오류 내용: ${escHtml(state.leaderboardError)}</div>
+      </div>
+      <button class="btn block" style="margin-top:14px;" onclick="goLeaderboard()">다시 시도</button>
+    `;
+    return;
+  }
+  const rows = state.leaderboard || [];
+  const medal = rank => rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+  appEl.innerHTML = `
+    <div class="nav-row"><button class="link-btn" onclick="goHome()">&larr; 홈으로</button></div>
+    <h1 style="font-size:22px;">🏆 순위 보기</h1>
+    <p class="subtitle">난이도 → 누적 정답 개수 → 마스터한 단어 수 순서로 매겨요.</p>
+    ${rows.length===0 ? `<p class="empty-note">아직 순위를 매길 데이터가 없어요.</p>` :
+      rows.map(r=>`
+        <div class="rank-row ${r.rank===1?'top1':r.rank===2?'top2':r.rank===3?'top3':''}">
+          <div class="rank-num">${medal(r.rank)}</div>
+          <div class="rank-info">
+            <div class="rank-name">${escHtml(r.name)}${profile && r.name===profile.name ? ' (나)' : ''}</div>
+            <div class="rank-level">${escHtml(r.level)}</div>
+          </div>
+          <div class="rank-stats">누적 정답 <b>${r.totalCorrect}</b>개<br>마스터 단어 <b>${r.masteredWordCount}</b>개</div>
+        </div>
+      `).join('')
+    }
+  `;
+}
+function goHistory(){
+  state.screen = "history";
+  state.historyMonthIndex = 0;
+  appEl.innerHTML = `<div class="loading">기록을 불러오는 중...</div>`;
+  gsRun('getRoundHistory', profile.id, 30).then(raw=>{
+    state.historyRaw = raw;
+    try{
+      state.history = raw ? JSON.parse(raw) : [];
+      state.historyError = null;
+    }catch(parseErr){
+      state.history = null;
+      state.historyError = "응답 파싱 실패: " + errText(parseErr);
+    }
+    render();
+  }).catch(e=>{
+    state.history = null;
+    state.historyError = errText(e);
+    render();
+  });
+}
+
+function typeLabel(t){ return t==='mcq' ? '객관식' : t==='spell' ? '주관식' : '섞어서'; }
+function monthKeyOf(r){
+  // datetime: 'yyyy-MM-dd HH:mm:ss' 또는 'yyyy-MM-dd'
+  const s = r.datetime || '';
+  return s.length >= 7 ? s.slice(0,7) : '기타'; // 'yyyy-MM'
+}
+function monthLabelOf(key){
+  if(key==='기타') return '기타';
+  const [y,m] = key.split('-');
+  return `${y}년 ${Number(m)}월`;
+}
+/** 이미 최신순으로 정렬된 배열을 월별 그룹으로 묶어요 (그룹 순서도 최신월이 먼저). */
+function groupByMonth(rows){
+  const groups = [];
+  const map = {};
+  rows.forEach(r=>{
+    const key = monthKeyOf(r);
+    if(!map[key]){
+      map[key] = { key, label: monthLabelOf(key), items: [] };
+      groups.push(map[key]);
+    }
+    map[key].items.push(r);
+  });
+  return groups;
+}
+function historyRowHtml(r, showName){
+  return `
+    <div class="hist-row">
+      <div class="hist-top">
+        <span>${escHtml(r.datetime)} · ${typeLabel(r.questionType)}${showName ? ` · <b>${escHtml(r.userName)}</b>` : ''}</span>
+        <span>${r.correctFirstTry} / ${r.totalWords}</span>
+      </div>
+      ${r.wrongWords ? `<div class="hist-sub">틀린 단어: ${escHtml(r.wrongWords)}</div>` : `<div class="hist-sub">전부 맞혔어요 👏</div>`}
+      ${r.masteredWords ? `<div class="hist-sub" style="color:var(--correct);">졸업: ${escHtml(r.masteredWords)}</div>` : ''}
+    </div>
+  `;
+}
+/** 월 화살표 네비게이션 UI + 현재 월의 목록을 함께 그려줘요. */
+function monthArrowView(groups, monthIndex, prevFn, nextFn, showName){
+  if(groups.length===0){
+    return `<p class="empty-note">아직 학습 기록이 없어요.</p>`;
+  }
+  const idx = Math.min(Math.max(monthIndex,0), groups.length-1);
+  const g = groups[idx];
+  const hasOlder = idx < groups.length-1;
+  const hasNewer = idx > 0;
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <button class="btn secondary" style="padding:8px 14px;" ${hasOlder?'':'disabled'} onclick="${prevFn}()">&larr; 이전 달</button>
+      <div style="font-weight:800;font-size:15px;">${escHtml(g.label)} <span style="color:var(--ink-soft);font-weight:600;font-size:12.5px;">(${g.items.length}회)</span></div>
+      <button class="btn secondary" style="padding:8px 14px;" ${hasNewer?'':'disabled'} onclick="${nextFn}()">다음 달 &rarr;</button>
+    </div>
+    <div class="flashcard" style="padding:16px 18px 4px 44px;">
+      ${g.items.map(r=>historyRowHtml(r, showName)).join('')}
+    </div>
+  `;
+}
+function historyPrevMonth(){ state.historyMonthIndex = (state.historyMonthIndex||0) + 1; render(); }
+function historyNextMonth(){ state.historyMonthIndex = Math.max(0, (state.historyMonthIndex||0) - 1); render(); }
+
+function renderHistory(){
+  if(state.historyError){
+    appEl.innerHTML = `
+      <div class="nav-row"><button class="link-btn" onclick="goHome()">&larr; 홈으로</button></div>
+      <h1 style="font-size:22px;">학습 기록</h1>
+      <div class="feedback-box wrong">
+        기록을 불러오지 못했어요.
+        <div style="margin-top:6px;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:11.5px;opacity:.85;word-break:break-all;">오류 내용: ${escHtml(state.historyError)}</div>
+      </div>
+      <button class="btn block" style="margin-top:14px;" onclick="goHistory()">다시 시도</button>
+    `;
+    return;
+  }
+  const rows = state.history || [];
+  const groups = groupByMonth(rows);
+  appEl.innerHTML = `
+    <div class="nav-row"><button class="link-btn" onclick="goHome()">&larr; 홈으로</button></div>
+    <h1 style="font-size:22px;">학습 기록</h1>
+    <p class="subtitle">한 달씩 화살표로 넘겨보며 점수와 틀린 단어를 확인해요.</p>
+    ${monthArrowView(groups, state.historyMonthIndex||0, 'historyPrevMonth', 'historyNextMonth', false)}
+  `;
+}
+
+/* ---------------- 관리자 인증 + 사람별 상세 기록 ---------------- */
+let isAdminAuthed = false; // 세션 동안만 유지 (새로고침하면 다시 인증 필요)
+
+async function submitAdminAuth(){
+  const inp = document.getElementById('adminAuthInput');
+  const pw = inp ? inp.value : "";
+  blurActive();
+  try{
+    const ok = await gsRun('checkAdminPassword', pw);
+    if(ok){
+      isAdminAuthed = true;
+      loadSettingsData();
+    } else {
+      state.adminAuthError = "비밀번호가 틀렸어요. 다시 입력해주세요.";
+      render();
+    }
+  }catch(e){
+    state.adminAuthError = "확인에 실패했어요: " + errText(e);
+    render();
+  }
+}
+function renderAdminAuth(){
+  appEl.innerHTML = `
+    <div class="nav-row"><button class="link-btn" onclick="goHome()">&larr; 홈으로</button></div>
+    <h1 style="font-size:22px;">설정 (관리자 전용)</h1>
+    <p class="subtitle">AI 모델, 단계 목표, 학습 기록 등은 관리자 비밀번호가 있어야 볼 수 있어요.</p>
+    <input id="adminAuthInput" class="text-input" type="password" placeholder="관리자 비밀번호" autofocus
+      onkeydown="if(event.key==='Enter') submitAdminAuth()">
+    ${state.adminAuthError ? `<p style="color:var(--wrong);font-size:12.5px;margin:4px 0 0;">${escHtml(state.adminAuthError)}</p>` : ''}
+    <button class="btn block" style="margin-top:14px;" onclick="submitAdminAuth()">확인</button>
+  `;
+  const inp = document.getElementById('adminAuthInput');
+  if(inp) inp.focus();
+}
+
+function renderAdminPerson(){
+  const rows = state.adminHistory || [];
+  const person = PROFILES.find(p=>p.id===state.adminSelectedUserId);
+  const filtered = rows.filter(r=>r.userId===state.adminSelectedUserId);
+  const groups = groupByMonth(filtered);
+  appEl.innerHTML = `
+    <div class="nav-row"><button class="link-btn" onclick="adminBackToList()">&larr; 설정으로</button></div>
+    <h1 style="font-size:22px;">${escHtml(person ? person.name : '알 수 없음')}님의 기록</h1>
+    <p class="subtitle">한 달씩 화살표로 넘겨보며 확인해요.</p>
+    ${monthArrowView(groups, state.adminMonthIndex||0, 'adminPrevMonth', 'adminNextMonth', false)}
+  `;
+}
+</script>
+</body>
+</html>
