@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const C=require('../learning-core_v0.0.1.js');
-const source=fs.readFileSync(require.resolve('../app_v0.0.3.js'),'utf8').split('(async()=>{try{if(DEMO)initDemo();')[0];
+const source=fs.readFileSync(require.resolve('../app_v0.0.4.js'),'utf8').split('(async()=>{try{if(DEMO)initDemo();')[0];
 function app(){
   const events={},storage=new Map(),node={innerHTML:'',focus(){},querySelector(){return {focus(){}}},addEventListener:(name,fn)=>events[name]=fn};
   const ctx=vm.createContext({window:{WM:C,addEventListener(){}},document:{getElementById:()=>node},location:{search:'?demo=1'},URLSearchParams,localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)},crypto:{randomUUID:()=> 'test'},setTimeout,clearTimeout});
@@ -19,7 +19,7 @@ test('revealing is ungraded; response remains MCQ; next question hides choices a
   await a.run("action('show-options');");assert.match(a.html(),/data-action="pick"/);assert.equal(a.run('quiz.results.length'),0);
   await a.run("action('pick',String(quiz.options.indexOf('사과')));");
   assert.equal(a.run('quiz.results[0].type'),'mcq');assert.equal(a.run('quiz.results[0].correct'),true);
-  await a.run("action('next');");assert.match(a.html(),/보기 확인하기/);assert.doesNotMatch(a.html(),/data-action="pick"/);
+  await a.run("quiz.feedbackReadyAt=0;action('next');");assert.match(a.html(),/보기 확인하기/);assert.doesNotMatch(a.html(),/data-action="pick"/);
 });
 test('off and free learning show choices immediately',()=>{
   for(const setting of ['false','undefined']){const a=app();a.run(`startQuiz(words,{questionType:'mcq',recallFirst:${setting},mcqOptionCount:4});`);assert.match(a.html(),/data-action="pick"/);assert.doesNotMatch(a.html(),/보기 확인하기/);}
