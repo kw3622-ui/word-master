@@ -1,0 +1,482 @@
+[
+  {
+    "word": "hello",
+    "meaning": "안녕하세요",
+    "level": "초등기본",
+    "pos": "감탄사",
+    "example": "Hello, my name is Mina.",
+    "translation": "안녕하세요, 제 이름은 미나예요."
+  },
+  {
+    "word": "goodbye",
+    "meaning": "안녕히 가세요; 잘 가",
+    "level": "초등기본",
+    "pos": "감탄사",
+    "example": "Goodbye, see you tomorrow.",
+    "translation": "잘 가, 내일 보자."
+  },
+  {
+    "word": "thanks",
+    "meaning": "고마워요",
+    "level": "초등기본",
+    "pos": "감탄사",
+    "example": "Thanks for your help.",
+    "translation": "도와줘서 고마워요."
+  },
+  {
+    "word": "sorry",
+    "meaning": "미안한; 미안해요",
+    "level": "초등기본",
+    "pos": "형용사; 감탄사",
+    "example": "I am sorry I am late.",
+    "translation": "늦어서 미안해요."
+  },
+  {
+    "word": "welcome",
+    "meaning": "환영하다; 환영하는",
+    "level": "초등기본",
+    "pos": "동사; 형용사",
+    "example": "We welcome new students.",
+    "translation": "우리는 새 학생들을 환영해요."
+  },
+  {
+    "word": "schoolbag",
+    "meaning": "책가방",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "My schoolbag is under the desk.",
+    "translation": "내 책가방은 책상 아래에 있어요."
+  },
+  {
+    "word": "dinner",
+    "meaning": "저녁 식사",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "We eat dinner together.",
+    "translation": "우리는 함께 저녁을 먹어요."
+  },
+  {
+    "word": "pear",
+    "meaning": "배",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "This pear is sweet.",
+    "translation": "이 배는 달아요."
+  },
+  {
+    "word": "pineapple",
+    "meaning": "파인애플",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "We cut the pineapple into pieces.",
+    "translation": "우리는 파인애플을 조각으로 잘라요."
+  },
+  {
+    "word": "cucumber",
+    "meaning": "오이",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "I put cucumber in my sandwich.",
+    "translation": "나는 샌드위치에 오이를 넣어요."
+  },
+  {
+    "word": "broccoli",
+    "meaning": "브로콜리",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "The broccoli is green.",
+    "translation": "브로콜리는 초록색이에요."
+  },
+  {
+    "word": "toothpaste",
+    "meaning": "치약",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "We need more toothpaste.",
+    "translation": "우리는 치약이 더 필요해요."
+  },
+  {
+    "word": "shampoo",
+    "meaning": "샴푸",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "This shampoo smells nice.",
+    "translation": "이 샴푸는 향기가 좋아요."
+  },
+  {
+    "word": "raincoat",
+    "meaning": "비옷",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "Wear your raincoat today.",
+    "translation": "오늘은 비옷을 입으세요."
+  },
+  {
+    "word": "cousin",
+    "meaning": "사촌",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "My cousin lives near our school.",
+    "translation": "내 사촌은 우리 학교 근처에 살아요."
+  },
+  {
+    "word": "grandson",
+    "meaning": "손자",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "Her grandson is five years old.",
+    "translation": "그녀의 손자는 다섯 살이에요."
+  },
+  {
+    "word": "granddaughter",
+    "meaning": "손녀",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "His granddaughter likes music.",
+    "translation": "그의 손녀는 음악을 좋아해요."
+  },
+  {
+    "word": "question",
+    "meaning": "질문; 문제",
+    "level": "초등기본",
+    "pos": "명사",
+    "example": "I have a question.",
+    "translation": "질문이 있어요."
+  },
+  {
+    "word": "answer",
+    "meaning": "대답; 답; 대답하다",
+    "level": "초등기본",
+    "pos": "명사; 동사",
+    "example": "Write your answer here.",
+    "translation": "여기에 답을 쓰세요."
+  },
+  {
+    "word": "remember",
+    "meaning": "기억하다",
+    "level": "초등기본",
+    "pos": "동사",
+    "example": "I remember your name.",
+    "translation": "나는 네 이름을 기억해요."
+  },
+  {
+    "word": "forget",
+    "meaning": "잊다",
+    "level": "초등기본",
+    "pos": "동사",
+    "example": "Do not forget your bag.",
+    "translation": "가방을 잊지 마세요."
+  },
+  {
+    "word": "shy",
+    "meaning": "수줍어하는",
+    "level": "초등기본",
+    "pos": "형용사",
+    "example": "The shy child smiled.",
+    "translation": "수줍어하는 아이가 웃었어요."
+  },
+  {
+    "word": "polite",
+    "meaning": "예의 바른",
+    "level": "초등심화",
+    "pos": "형용사",
+    "example": "It is polite to say thank you.",
+    "translation": "고맙다고 말하는 것은 예의 바른 행동이에요."
+  },
+  {
+    "word": "helpful",
+    "meaning": "도움이 되는; 잘 도와주는",
+    "level": "초등심화",
+    "pos": "형용사",
+    "example": "Your advice was helpful.",
+    "translation": "네 조언은 도움이 됐어요."
+  },
+  {
+    "word": "headache",
+    "meaning": "두통",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "I have a headache.",
+    "translation": "나는 머리가 아파요."
+  },
+  {
+    "word": "stomachache",
+    "meaning": "복통",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "He has a stomachache.",
+    "translation": "그는 배가 아파요."
+  },
+  {
+    "word": "nephew",
+    "meaning": "조카 (남자)",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "My nephew likes drawing.",
+    "translation": "내 남자 조카는 그림 그리기를 좋아해요."
+  },
+  {
+    "word": "niece",
+    "meaning": "조카 (여자)",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "My niece is learning to swim.",
+    "translation": "내 여자 조카는 수영을 배우고 있어요."
+  },
+  {
+    "word": "timetable",
+    "meaning": "시간표",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "Check your timetable before class.",
+    "translation": "수업 전에 시간표를 확인하세요."
+  },
+  {
+    "word": "meaning",
+    "meaning": "뜻; 의미",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "What is the meaning of this word?",
+    "translation": "이 단어의 뜻은 무엇인가요?"
+  },
+  {
+    "word": "understand",
+    "meaning": "이해하다",
+    "level": "초등심화",
+    "pos": "동사",
+    "example": "I understand the question now.",
+    "translation": "나는 이제 질문을 이해해요."
+  },
+  {
+    "word": "password",
+    "meaning": "비밀번호",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "Keep your password private.",
+    "translation": "비밀번호를 다른 사람에게 알려주지 마세요."
+  },
+  {
+    "word": "online",
+    "meaning": "온라인으로; 온라인의",
+    "level": "초등심화",
+    "pos": "부사; 형용사",
+    "example": "We can read the story online.",
+    "translation": "우리는 온라인으로 그 이야기를 읽을 수 있어요."
+  },
+  {
+    "word": "charger",
+    "meaning": "충전기",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "My phone charger is on the table.",
+    "translation": "내 휴대전화 충전기는 탁자 위에 있어요."
+  },
+  {
+    "word": "headphones",
+    "meaning": "헤드폰",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "She listens to music with headphones.",
+    "translation": "그녀는 헤드폰으로 음악을 들어요."
+  },
+  {
+    "word": "earphones",
+    "meaning": "이어폰",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "Put your earphones in the case.",
+    "translation": "이어폰을 케이스에 넣으세요."
+  },
+  {
+    "word": "smartphone",
+    "meaning": "스마트폰",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "Use your smartphone carefully.",
+    "translation": "스마트폰을 주의해서 사용하세요."
+  },
+  {
+    "word": "dragonfly",
+    "meaning": "잠자리",
+    "level": "초등심화",
+    "pos": "명사",
+    "example": "A dragonfly flew over the pond.",
+    "translation": "잠자리가 연못 위로 날아갔어요."
+  },
+  {
+    "word": "decide",
+    "meaning": "결정하다",
+    "level": "중등기본",
+    "pos": "동사",
+    "example": "We must decide what to do next.",
+    "translation": "우리는 다음에 무엇을 할지 결정해야 해요."
+  },
+  {
+    "word": "improve",
+    "meaning": "향상시키다; 나아지다",
+    "level": "중등기본",
+    "pos": "동사",
+    "example": "Reading can improve your vocabulary.",
+    "translation": "독서는 어휘력을 향상시킬 수 있어요."
+  },
+  {
+    "word": "prepare",
+    "meaning": "준비하다",
+    "level": "중등기본",
+    "pos": "동사",
+    "example": "I prepare my bag at night.",
+    "translation": "나는 밤에 가방을 준비해요."
+  },
+  {
+    "word": "review",
+    "meaning": "복습하다; 검토하다",
+    "level": "중등기본",
+    "pos": "동사",
+    "example": "Let us review yesterday's words.",
+    "translation": "어제 배운 단어를 복습합시다."
+  },
+  {
+    "word": "agree",
+    "meaning": "동의하다",
+    "level": "중등기본",
+    "pos": "동사",
+    "example": "I agree with your idea.",
+    "translation": "나는 네 생각에 동의해요."
+  },
+  {
+    "word": "suggest",
+    "meaning": "제안하다",
+    "level": "중등기본",
+    "pos": "동사",
+    "example": "I suggest taking a short break.",
+    "translation": "잠깐 쉬는 것을 제안해요."
+  },
+  {
+    "word": "pronounce",
+    "meaning": "발음하다",
+    "level": "중등기본",
+    "pos": "동사",
+    "example": "How do you pronounce this word?",
+    "translation": "이 단어를 어떻게 발음하나요?"
+  },
+  {
+    "word": "pronunciation",
+    "meaning": "발음",
+    "level": "중등기본",
+    "pos": "명사",
+    "example": "Listen carefully to the pronunciation.",
+    "translation": "발음을 주의 깊게 들으세요."
+  },
+  {
+    "word": "appointment",
+    "meaning": "약속; 예약",
+    "level": "중등기본",
+    "pos": "명사",
+    "example": "I have a dental appointment tomorrow.",
+    "translation": "나는 내일 치과 진료 예약이 있어요."
+  },
+  {
+    "word": "energy",
+    "meaning": "에너지; 기운",
+    "level": "중등기본",
+    "pos": "명사",
+    "example": "We get energy from food.",
+    "translation": "우리는 음식에서 에너지를 얻어요."
+  },
+  {
+    "word": "reuse",
+    "meaning": "재사용하다",
+    "level": "중등기본",
+    "pos": "동사",
+    "example": "We can reuse this bag.",
+    "translation": "우리는 이 가방을 다시 쓸 수 있어요."
+  },
+  {
+    "word": "recycling",
+    "meaning": "재활용",
+    "level": "중등기본",
+    "pos": "명사",
+    "example": "Recycling helps reduce waste.",
+    "translation": "재활용은 쓰레기를 줄이는 데 도움이 돼요."
+  },
+  {
+    "word": "litter",
+    "meaning": "쓰레기; 쓰레기를 버리다",
+    "level": "중등기본",
+    "pos": "명사; 동사",
+    "example": "Please do not leave litter in the park.",
+    "translation": "공원에 쓰레기를 버리지 마세요."
+  },
+  {
+    "word": "opportunity",
+    "meaning": "기회",
+    "level": "중등심화",
+    "pos": "명사",
+    "example": "This is an opportunity to learn.",
+    "translation": "이것은 배울 기회예요."
+  },
+  {
+    "word": "privacy",
+    "meaning": "사생활; 개인정보 보호",
+    "level": "중등심화",
+    "pos": "명사",
+    "example": "Respect other people's privacy.",
+    "translation": "다른 사람의 사생활을 존중하세요."
+  },
+  {
+    "word": "misinformation",
+    "meaning": "잘못된 정보",
+    "level": "고등기본",
+    "pos": "명사",
+    "example": "Check the facts to avoid misinformation.",
+    "translation": "잘못된 정보를 피하려면 사실을 확인하세요."
+  },
+  {
+    "word": "media literacy",
+    "meaning": "미디어 정보를 비판적으로 이해하는 능력",
+    "level": "고등심화",
+    "pos": "명사구",
+    "example": "Media literacy helps us judge online information.",
+    "translation": "미디어 이해 능력은 온라인 정보를 판단하는 데 도움이 돼요."
+  },
+  {
+    "word": "critical thinking",
+    "meaning": "비판적 사고",
+    "level": "고등심화",
+    "pos": "명사구",
+    "example": "Critical thinking means asking careful questions.",
+    "translation": "비판적 사고란 신중하게 질문하는 것을 뜻해요."
+  },
+  {
+    "word": "ask for help",
+    "meaning": "도움을 요청하다",
+    "level": "초등기본",
+    "pos": "동사구",
+    "example": "You can ask for help.",
+    "translation": "도움을 요청해도 괜찮아요."
+  },
+  {
+    "word": "make a mistake",
+    "meaning": "실수하다",
+    "level": "초등심화",
+    "pos": "동사구",
+    "example": "It is okay to make a mistake.",
+    "translation": "실수해도 괜찮아요."
+  },
+  {
+    "word": "get ready",
+    "meaning": "준비하다",
+    "level": "초등기본",
+    "pos": "동사구",
+    "example": "Get ready for school.",
+    "translation": "학교 갈 준비를 하세요."
+  },
+  {
+    "word": "put away",
+    "meaning": "제자리에 치우다",
+    "level": "초등심화",
+    "pos": "동사구",
+    "example": "Please put away your toys.",
+    "translation": "장난감을 제자리에 치워주세요."
+  }
+]
