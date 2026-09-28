@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const C=require('../learning-core_v0.0.1.js');
-const source=fs.readFileSync(require.resolve('../app_v0.0.4.js'),'utf8').split('(async()=>{try{if(DEMO)initDemo();')[0];
+const source=fs.readFileSync(require.resolve('../app_v0.0.5.js'),'utf8').split('(async()=>{try{if(DEMO)initDemo();')[0];
 function app(){
  const events={},storage=new Map(),node={innerHTML:'',focus(){},showModal(){this.open=true;},querySelector(){return {focus(){}}},addEventListener:(k,v)=>events[k]=v};
  const ctx=vm.createContext({window:{WM:C,addEventListener(){}},document:{getElementById:()=>node},location:{search:'?demo=1'},URLSearchParams,localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)},crypto:{randomUUID:()=> 'test'},setTimeout,clearTimeout});
