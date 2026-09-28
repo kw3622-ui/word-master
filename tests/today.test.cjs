@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const C=require('../learning-core_v0.0.1.js');
-const source=fs.readFileSync(require.resolve('../app_v0.0.4.js'),'utf8').split('(async()=>{try{if(DEMO)initDemo();')[0];
+const source=fs.readFileSync(require.resolve('../app_v0.0.5.js'),'utf8').split('(async()=>{try{if(DEMO)initDemo();')[0];
 function app(){
   const events={},elements={app:{addEventListener:(name,fn)=>events[name]=fn}};
   const ctx=vm.createContext({window:{WM:C,addEventListener(){}},document:{getElementById:id=>elements[id]||{}},location:{search:'?demo=1'},URLSearchParams,localStorage:{getItem:()=>null,setItem(){}},crypto:{randomUUID:()=> 'test-round'},setTimeout,clearTimeout});
